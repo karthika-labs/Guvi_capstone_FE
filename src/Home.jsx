@@ -6,6 +6,7 @@ import ApiContext from "./context/ApiContext";
 function Home() {
   const [searchbar, setSearchbar] = useState(false);
   const { favoritesCount, user, searchRecipes } = useContext(ApiContext);
+  const [searchMode, setSearchMode] = useState("name"); // "name" or "ingredients"
 
   const [filters, setFilters] = useState({
     searchText: "",
@@ -47,9 +48,11 @@ const handleSearch = async () => {
   if (filters.mealType) params.mealType = filters.mealType;
   if (filters.foodPreference) params.foodPreference = filters.foodPreference;
 
-  // SINGLE SEARCH BAR
+  // SINGLE SEARCH BAR with mode-based search
   if (filters.searchText?.trim()) {
     params.search = filters.searchText.trim();
+    // Set type parameter based on search mode
+    params.type = searchMode === "name" ? "rcp" : "ing";
   }
 
   try {
@@ -155,12 +158,47 @@ const handleSearch = async () => {
                     </button>
 
                     <div className="w-full max-w-5xl bg-[#1a1a2e] border border-purple-900/40 rounded-2xl p-6 shadow-lg">
+                      {/* Search Mode Toggle */}
+                      <div className="mb-6 flex flex-col items-center">
+                        <div className="flex items-center gap-3 bg-[#0f0f1a] rounded-full p-1 border border-purple-900/40">
+                          <button
+                            onClick={() => setSearchMode("name")}
+                            className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
+                              searchMode === "name"
+                                ? "bg-purple-600 text-white shadow-lg"
+                                : "text-gray-400 hover:text-white"
+                            }`}
+                          >
+                            Recipe Name
+                          </button>
+                          <button
+                            onClick={() => setSearchMode("ingredients")}
+                            className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
+                              searchMode === "ingredients"
+                                ? "bg-purple-600 text-white shadow-lg"
+                                : "text-gray-400 hover:text-white"
+                            }`}
+                          >
+                            Ingredients
+                          </button>
+                        </div>
+                        <p className="text-gray-400 text-sm mt-2">
+                          {searchMode === "name"
+                            ? "Search by recipe name (e.g., biryani, pasta)"
+                            : "Search by ingredients you have (e.g., paneer, tomato, onion)"}
+                        </p>
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {/* Recipe name */}
                         <div className="relative col-span-1 md:col-span-2">
                           <input
                             type="text"
-                            placeholder="Search recipe or ingredients (eg: paneer, tomato, biryani)"
+                            placeholder={
+                              searchMode === "name"
+                                ? "Enter recipe name (e.g., biryani, pasta)"
+                                : "Enter ingredients (e.g., paneer, tomato, onion)"
+                            }
                             value={filters.searchText}
                             onChange={(e) =>
                               setFilters({ ...filters, searchText: e.target.value })
