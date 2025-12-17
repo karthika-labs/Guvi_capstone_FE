@@ -21,7 +21,7 @@ export const ApiProvider = ({ children }) => {
   // get user details
   const fetchUser = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/users/current", {
+      const res = await axios.get("http://localhost:5001/users/current", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setUser(res.data);
@@ -33,9 +33,12 @@ export const ApiProvider = ({ children }) => {
 
   //update user
   // update logged-in user profile
-  const updateProfile = async (body) => {
-    try {
-      const res = await axios.put("http://localhost:5000/users/me", body, {
+const updateProfile = async (body) => {
+  try {
+    const res = await axios.put(
+      "http://localhost:5001/users/me",
+      body,
+      {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -57,7 +60,7 @@ export const ApiProvider = ({ children }) => {
 
   const getRecipe = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/recipes", {
+      const res = await axios.get("http://localhost:5001/recipes", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -74,7 +77,7 @@ export const ApiProvider = ({ children }) => {
     try {
       if (!user?._id) return;
       const res = await axios.get(
-        `http://localhost:5000/favorites/user/${user._id}`,
+        `http://localhost:5001/favorites/user/${user._id}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -92,7 +95,7 @@ export const ApiProvider = ({ children }) => {
     try {
       // 1. Get current list
       const res = await axios.get(
-        `http://localhost:5000/favorites/user/${user._id}`,
+        `http://localhost:5001/favorites/user/${user._id}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -109,7 +112,7 @@ export const ApiProvider = ({ children }) => {
       if (already) {
         // DELETE
         try {
-          await axios.delete(`http://localhost:5000/favorites/${recipeId}`, {
+          await axios.delete(`http://localhost:5001/favorites/${recipeId}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
@@ -122,7 +125,7 @@ export const ApiProvider = ({ children }) => {
         // POST
         try {
           await axios.post(
-            `http://localhost:5000/favorites`,
+            `http://localhost:5001/favorites`,
             { recipeId },
             {
               headers: {
@@ -153,7 +156,7 @@ export const ApiProvider = ({ children }) => {
   // 1) Fetch all week plans for current user (dashboard)
   const fetchWeekPlans = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/plans", {
+      const res = await axios.get("http://localhost:5001/plans", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       // backend returns { getPlan: [...] }
@@ -171,7 +174,7 @@ export const ApiProvider = ({ children }) => {
   // body: { weekStartDate: DateString, plans: { monday: {...}, ... } }
   const createWeekPlan = async (body) => {
     try {
-      const res = await axios.post("http://localhost:5000/plans", body, {
+      const res = await axios.post("http://localhost:5001/plans", body, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
@@ -201,7 +204,7 @@ export const ApiProvider = ({ children }) => {
   // 3) Get single week plan by id (detail view)
   const fetchWeekById = async (id) => {
     try {
-      const res = await axios.get(`http://localhost:5000/plans/${id}`, {
+      const res = await axios.get(`http://localhost:5001/plans/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       // backend returns { getOnePlan: {...} }
@@ -221,7 +224,7 @@ export const ApiProvider = ({ children }) => {
   // PUT /plans/:id with body of the updated plan (client can pass only changed fields)
   const updateWeek = async (id, body) => {
     try {
-      const res = await axios.put(`http://localhost:5000/plans/${id}`, body, {
+      const res = await axios.put(`http://localhost:5001/plans/${id}`, body, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setCurrentWeek(res.data.updated || res.data.getOnePlan || null);
@@ -243,7 +246,7 @@ export const ApiProvider = ({ children }) => {
     try {
       // note: your route string had a space typo earlier; ensure server route is correct.
       const res = await axios.put(
-        `http://localhost:5000/plans/${id}/day/${day}/meal/${meal}`,
+        `http://localhost:5001/plans/${id}/day/${day}/meal/${meal}`,
         { recipeId },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -271,7 +274,7 @@ export const ApiProvider = ({ children }) => {
   // 6) Delete week plan
   const deleteWeek = async (id) => {
     try {
-      const res = await axios.delete(`http://localhost:5000/plans/${id}`, {
+      const res = await axios.delete(`http://localhost:5001/plans/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setWeekPlans((prev) => prev.filter((w) => w._id !== id));
@@ -289,7 +292,7 @@ export const ApiProvider = ({ children }) => {
   const createShoppingList = async (planId) => {
     try {
       const res = await axios.post(
-        `http://localhost:5000/plans/${planId}/lists`,
+        `http://localhost:5001/plans/${planId}/lists`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -312,7 +315,7 @@ export const ApiProvider = ({ children }) => {
   const fetchShoppingList = async (planId, listId) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/plans/${planId}/lists/${listId}`,
+        `http://localhost:5001/plans/${planId}/lists/${listId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -333,7 +336,7 @@ export const ApiProvider = ({ children }) => {
   // const updateShoppingList = async (planId, listId, updatedLists) => {
   //   try {
   //     const res = await axios.put(
-  //       `http://localhost:5000/plans/${planId}/lists/${listId}`,
+  //       `http://localhost:5001/plans/${planId}/lists/${listId}`,
   //      { lists: updatedLists },
   //       {
   //         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -358,7 +361,7 @@ export const ApiProvider = ({ children }) => {
   const updateShoppingList = async (planId, listId, body) => {
     try {
       const res = await axios.put(
-        `http://localhost:5000/plans/${planId}/lists/${listId}`,
+        `http://localhost:5001/plans/${planId}/lists/${listId}`,
         body,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -380,7 +383,7 @@ export const ApiProvider = ({ children }) => {
   const deleteShoppingList = async (planId, listId) => {
     try {
       const res = await axios.delete(
-        `http://localhost:5000/plans/${planId}/lists/${listId}`,
+        `http://localhost:5001/plans/${planId}/lists/${listId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -414,7 +417,7 @@ export const ApiProvider = ({ children }) => {
   const removeIngredient = async (planId, listId, itemName) => {
     try {
       const res = await axios.delete(
-        `http://localhost:5000/plans/${planId}/lists/${listId}/ingredient`,
+        `http://localhost:5001/plans/${planId}/lists/${listId}/ingredient`,
         {
           data: { itemName },
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -451,12 +454,12 @@ export const ApiProvider = ({ children }) => {
 
     setManualItem("");
 
-    // backend save
-    await axios.post(
-      `http://localhost:5000/plans/${planId}/lists/${listId}/manual`,
-      newItem,
-      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-    );
+  // backend save
+  await axios.post(
+    `http://localhost:5001/plans/${planId}/lists/${listId}/manual`,
+    newItem,
+    { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }}
+  );
 
     return newItem; // THIS IS IMPORTANT
   };
@@ -490,7 +493,7 @@ export const ApiProvider = ({ children }) => {
     const query = new URLSearchParams(params).toString();
 
     const res = await axios.get(
-      `http://localhost:5000/recipes/search?${query}`,
+      `http://localhost:5001/recipes/search?${query}`,
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

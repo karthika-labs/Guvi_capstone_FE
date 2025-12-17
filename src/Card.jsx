@@ -52,12 +52,12 @@ export default function Card({ recipe }) {
       setShowHeart(!alreadyLiked ? recipe._id : null);
 
       if (alreadyLiked) {
-        await axios.delete(`http://localhost:5000/recipes/${recipe._id}/like`, {
+        await axios.delete(`http://localhost:5001/recipes/${recipe._id}/like`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
       } else {
         await axios.post(
-          `http://localhost:5000/recipes/${recipe._id}/like`,
+          `http://localhost:5001/recipes/${recipe._id}/like`,
           {},
           {
             headers: {

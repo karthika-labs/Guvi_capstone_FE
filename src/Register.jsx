@@ -28,7 +28,7 @@ function Register() {
     },
     onSubmit: async (values) => {
       try {
-        const res = await axios.post("http://localhost:5000/users/register", values);
+        const res = await axios.post("http://localhost:5001/users/register", values);
         setToast(true);
         setTimeout(() => {
           navigate("/login");

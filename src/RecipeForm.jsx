@@ -91,7 +91,7 @@ function RecipeForm() {
       values.videoUrl = videoUrl;
 
       try {
-        const res = await axios.post("http://localhost:5000/recipes", values, {
+        const res = await axios.post("http://localhost:5001/recipes", values, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },

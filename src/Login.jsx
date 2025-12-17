@@ -25,7 +25,7 @@ function Login() {
     },
     onSubmit: async (values) => {
       try {
-        const res = await axios.post("http://localhost:5000/users/login", values);
+        const res = await axios.post("http://localhost:5001/users/login", values);
         localStorage.setItem("token", res.data.token);
         setToast(true);
         setTimeout(() => {
