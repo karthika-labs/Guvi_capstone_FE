@@ -33,29 +33,27 @@ export const ApiProvider = ({ children }) => {
 
   //update user
   // update logged-in user profile
-const updateProfile = async (body) => {
-  try {
-    const res = await axios.put(
-      "http://localhost:5000/users/me",
-      body,
-      {
+  const updateProfile = async (body) => {
+    try {
+      const res = await axios.put("http://localhost:5000/users/me", body, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      }
-    );
+      });
 
-    setUser(res.data); // IMPORTANT: update context user immediately
-    toast.success("Profile updated");
+      setUser(res.data); // IMPORTANT: update context user immediately
+      toast.success("Profile updated");
 
-    return res.data;
-  } catch (err) {
-    console.error("Error updating profile:", err?.response?.data || err.message);
-    toast.error("Profile update failed");
-    throw err;
-  }
-};
-
+      return res.data;
+    } catch (err) {
+      console.error(
+        "Error updating profile:",
+        err?.response?.data || err.message
+      );
+      toast.error("Profile update failed");
+      throw err;
+    }
+  };
 
   const getRecipe = async () => {
     try {
@@ -367,7 +365,7 @@ const updateProfile = async (body) => {
         }
       );
       setShoppingList(res.data.updated || res.data.allList || shoppingList);
-      console.log("updated list",res.data.updated)
+      console.log("updated list", res.data.updated);
       return res.data.updated || res.data;
     } catch (err) {
       console.error(
@@ -434,36 +432,34 @@ const updateProfile = async (body) => {
     }
   };
 
+  const addManual = async (planId, listId) => {
+    if (!manualItem.trim()) return;
 
-const addManual = async (planId, listId) => {
-  if (!manualItem.trim()) return;
+    const newItem = {
+      _id: crypto.randomUUID(),
+      itemName: manualItem,
+      quantity: 1,
+      unit: "",
+      purchased: false,
+    };
 
-  const newItem = {
-    _id: crypto.randomUUID(),
-    itemName: manualItem,
-    quantity: 1,
-    unit: "",
-    purchased: false,
+    // instant UI update (inside this component)
+    setShoppingList((prev) => ({
+      ...prev,
+      lists: [...prev.lists, newItem],
+    }));
+
+    setManualItem("");
+
+    // backend save
+    await axios.post(
+      `http://localhost:5000/plans/${planId}/lists/${listId}/manual`,
+      newItem,
+      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+    );
+
+    return newItem; // THIS IS IMPORTANT
   };
-
-  // instant UI update (inside this component)
-  setShoppingList(prev => ({
-    ...prev,
-    lists: [...prev.lists, newItem],
-  }));
-
-  setManualItem("");
-
-  // backend save
-  await axios.post(
-    `http://localhost:5000/plans/${planId}/lists/${listId}/manual`,
-    newItem,
-    { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }}
-  );
-
-  return newItem;  // THIS IS IMPORTANT
-};
-
 
   // -------------------- effects --------------------
   useEffect(() => {
@@ -488,6 +484,29 @@ const addManual = async (planId, listId) => {
     };
     loadWeeks();
   }, []);
+
+  const searchRecipes = async (params) => {
+    try{
+    const query = new URLSearchParams(params).toString();
+
+    const res = await axios.get(
+      `http://localhost:5000/recipes/search?${query}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    setRecipes(res.data || []);
+    console.log("Search results:", res.data);
+    return res.data;
+    }
+    catch(err){
+      console.error("Error searching recipes:", err);
+      throw err;
+    }
+    
+  };
 
   return (
     <ApiContext.Provider
@@ -521,8 +540,10 @@ const addManual = async (planId, listId) => {
         deleteShoppingList,
         removeIngredient,
         addManual,
-        manualItem, setManualItem
+        manualItem,
+        setManualItem,
 
+        searchRecipes,
       }}
     >
       {children}

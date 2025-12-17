@@ -36,11 +36,14 @@ export default function Card({ recipe }) {
   const { user, toggleFavorite, isFavorite, getRecipe } =
     useContext(ApiContext);
 
-  if (!recipe || !recipe._id ||!user) return null;
+ 
 
   const [showHeart, setShowHeart] = useState(null);
   const favorite = isFavorite(recipe._id);
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  
+
   const handleFavorite =  () => toggleFavorite(recipe._id);
 
   const handleLike = async () => {
@@ -75,6 +78,8 @@ export default function Card({ recipe }) {
     setShowHeart(recipe._id);
     setTimeout(() => setShowHeart(null), 600);
   };
+
+ if (!recipe || !recipe._id ||!user) return null;
 
   return (
     <div className="rounded-lg border border-[#2d2d2d] bg-[#1a1a1a] shadow-lg overflow-hidden flex flex-col">

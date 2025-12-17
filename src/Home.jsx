@@ -5,7 +5,65 @@ import ApiContext from "./context/ApiContext";
 
 function Home() {
   const [searchbar, setSearchbar] = useState(false);
-  const { favoritesCount, user } = useContext(ApiContext);
+  const { favoritesCount, user, searchRecipes } = useContext(ApiContext);
+
+  const [filters, setFilters] = useState({
+    searchText: "",
+    mealType: "",
+    foodPreference: "",
+  });
+
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // const handleSearch = async () => {
+  //   console.log("call seacrch ");
+  //   setLoading(true);
+
+  //   const params = {};
+
+  //   if (filters.mealType) params.mealType = filters.mealType;
+  //   if (filters.foodPreference) params.foodPreference = filters.foodPreference;
+  //   if (filters.recipeName) params.recipeName = filters.recipeName;
+
+  //   if (filters.ingredients) {
+  //     params.ingredients = filters.ingredients
+  //       .split(",")
+  //       .map((i) => i.trim())
+  //       .join(",");
+  //   }
+
+  //   const data = await searchRecipes(params);
+  //   setRecipes(data);
+  //   setLoading(false);
+  // };
+const handleSearch = async () => {
+  console.log("CALL SEARCH");
+
+  setLoading(true);
+
+  const params = {};
+
+  if (filters.mealType) params.mealType = filters.mealType;
+  if (filters.foodPreference) params.foodPreference = filters.foodPreference;
+
+  // SINGLE SEARCH BAR
+  if (filters.searchText?.trim()) {
+    params.search = filters.searchText.trim();
+  }
+
+  try {
+    const data = await searchRecipes(params);
+    setRecipes(data);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+    setSearchbar(false)
+  }
+};
+
+
   return (
     <div className="w-full bg-[#181818] ">
       <div className="flex flex-col items-center w-full max-w-7xl mx-auto justify-center min-h-screen bg-[#181818] text-white">
@@ -58,7 +116,7 @@ function Home() {
                     </span>
                   )}
                 </Link>
-                <Link>
+                <button>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -66,7 +124,7 @@ function Home() {
                     strokeWidth={1.5}
                     stroke="currentColor"
                     className="size-6 ml-6 cursor-pointer hover:text-purple-500 transition-all "
-                    onClick={() => setSearchbar(!searchbar)}
+                    onClick={() => setSearchbar((prev) => !prev)}
                   >
                     <path
                       strokeLinecap="round"
@@ -74,7 +132,111 @@ function Home() {
                       d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z"
                     />
                   </svg>
-                </Link>
+                </button>
+                {searchbar && (
+                  <div className="fixed inset-0 bg-black/90 flex justify-center items-center z-50 p-4 transition-opacity duration-300">
+                    {/* Close Button */}
+                    <button
+                      className="absolute top-5 left-5 bg-[#A100FF] hover:bg-purple-700 text-white p-2 rounded-full transition duration-300 hover:scale-110"
+                      onClick={() => setSearchbar(false)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+
+                    <div className="w-full max-w-5xl bg-[#1a1a2e] border border-purple-900/40 rounded-2xl p-6 shadow-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {/* Recipe name */}
+                        <div className="relative col-span-1 md:col-span-2">
+                          <input
+                            type="text"
+                            placeholder="Search recipe or ingredients (eg: paneer, tomato, biryani)"
+                            value={filters.searchText}
+                            onChange={(e) =>
+                              setFilters({ ...filters, searchText: e.target.value })
+                            }
+                            className="col-span-1 md:col-span-3 w-full py-3 px-4 pl-11 rounded-xl
+             bg-[#0f0f1a] text-white placeholder-gray-400
+             focus:outline-none focus:ring-2 focus:ring-purple-600"
+                          />
+
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-400">
+                            🔍
+                          </span>
+                        </div>
+
+                        {/* Meal type */}
+                        <select
+                          value={filters.mealType}
+                          onChange={(e) =>
+                            setFilters({ ...filters, mealType: e.target.value })
+                          }
+                          className="w-full py-3 px-4 rounded-xl bg-[#0f0f1a] text-white
+                     border border-purple-900/40 focus:ring-2 focus:ring-purple-600"
+                        >
+                          <option value="">All Meals</option>
+                          <option value="Breakfast">Breakfast</option>
+                          <option value="Lunch">Lunch</option>
+                          <option value="Dinner">Dinner</option>
+                        </select>
+
+                        {/* Food preference */}
+                        <select
+                          value={filters.foodPreference}
+                          onChange={(e) =>
+                            setFilters({
+                              ...filters,
+                              foodPreference: e.target.value,
+                            })
+                          }
+                          className="w-full py-3 px-4 rounded-xl bg-[#0f0f1a] text-white
+                     border border-purple-900/40 focus:ring-2 focus:ring-purple-600"
+                        >
+                          <option value="">All</option>
+                          <option value="Veg">Veg</option>
+                          <option value="Non-Veg">Non-Veg</option>
+                        </select>
+
+                        {/* Ingredients */}
+                        {/* <input
+                          type="text"
+                          placeholder="Ingredients (comma separated)"
+                          value={filters.ingredients}
+                          onChange={(e) =>
+                            setFilters({
+                              ...filters,
+                              ingredients: e.target.value,
+                            })
+                          }
+                          className="col-span-1 md:col-span-3 w-full py-3 px-4 rounded-xl
+                     bg-[#0f0f1a] text-white placeholder-gray-400
+                     focus:outline-none focus:ring-2 focus:ring-purple-600"
+                        /> */}
+
+                        {/* Search button */}
+                        <button
+                          onClick={handleSearch}
+                          className="col-span-1 py-3 px-6 rounded-xl font-semibold
+                     bg-purple-600 hover:bg-purple-700
+                     transition duration-300 hover:scale-105 text-white"
+                        >
+                          Search
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {user && (
                   <Link to={`/profile/${user._id}`}>
                     <svg
