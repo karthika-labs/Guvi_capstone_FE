@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+
+/* Pagination bullets */
+.swiper-pagination-bullet {
+  background: #A100FF !important;
+  opacity: 0.5;
+}
+
+.swiper-pagination-bullet-active {
+  background: #A100FF !important;
+  opacity: 1;
+}
+
+
+.shopping-list-container { background: #111; padding: 1rem; border-radius: 1rem; border: 1px solid #333; }
+.actions button { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 2px solid #888; transition: all 0.3s ease; }
+.actions button:hover { transform: scale(1.05); }
+.pdf-safe { background: #111; padding: 1rem; color: #fff; }
+.manual-add input { background: #1b1b1b; color: #fff; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #333; }
+.manual-add button { background: #333; color: #fff; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+.item-row { display: flex; justify-content: space-between; align-items: center; background: #1b1b1b; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 0.5rem; }
+.qty-btn { background: #444; color: #fff; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.remove-btn { background: #c00; color: #fff; padding: 0.25rem 0.5rem; border-radius: 0.5rem; }
+.title { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+@media print {
+  .pdf-safe {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  .pdf-safe * {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    border-color: #000000 !important;
+  }
+    .pdf-safe h1 {
+    color: #6b21a8 !important; 
+  }
+}
