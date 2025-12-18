@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -7,6 +7,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import axios from "axios";
 import ApiContext from "./context/ApiContext";
+import { FaShareAlt, FaWhatsapp, FaTwitter, FaFacebook, FaCopy, FaEllipsisH } from "react-icons/fa";
 
 // Helper functions
 const formatDate = (iso) =>
@@ -176,7 +177,7 @@ export default function Card({ recipe }) {
 
         <div className="flex justify-between items-center gap-2">
           <Link
-            to={`/recipes/${recipe._id}`}
+            to={`/recipe/${recipe._id}`}
             className="text-lg font-semibold text-grey-900 hover:underline dark:text-white"
           >
             {recipe.recipeName}

@@ -488,6 +488,62 @@ const updateProfile = async (body) => {
     loadWeeks();
   }, []);
 
+  const getRecipeById = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`http://localhost:5001/recipes/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("single Recipe fetched successfully:", res.data.recipe);
+      return res.data.recipe;
+    } catch (err) {
+      console.error("Error fetching recipe by id:", err);
+      throw err;
+    }
+  };
+
+  const postRating = async (recipeId, ratingValue) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(`http://localhost:5001/recipes/${recipeId}/ratings`, 
+        { value: ratingValue },
+        {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+    } catch (err) {
+        console.error("Failed to post rating:", err);
+        throw err;
+    }
+  };
+
+  const updateRating = async (recipeId, ratingId, ratingValue) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(`http://localhost:5001/recipes/${recipeId}/ratings/${ratingId}`, 
+        { value: ratingValue },
+        {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+    } catch (err) {
+        console.error("Failed to update rating:", err);
+        throw err;
+    }
+  };
+
+  const postComment = async (recipeId, commentText) => {
+    try {
+        const token = localStorage.getItem("token");
+        await axios.post(`http://localhost:5001/recipes/${recipeId}/comments`, 
+        commentText,
+        {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+    } catch (err) {
+        console.error("Failed to post comment:", err);
+        throw err;
+    }
+  };
+
   const searchRecipes = async (params) => {
     try{
     const query = new URLSearchParams(params).toString();
@@ -546,6 +602,10 @@ const updateProfile = async (body) => {
         manualItem,
         setManualItem,
 
+        getRecipeById,
+        postRating,
+        postComment,
+        updateRating,
         searchRecipes,
       }}
     >

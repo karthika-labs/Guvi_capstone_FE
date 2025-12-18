@@ -18,6 +18,8 @@ import WeekPlannerPage from "./WeekPlannerPage";
 import { ToastContainer } from "react-toastify";
 import ShoppingListPage from "./ShoppingListPage";
 import ProfilePage from "./ProfilePage";
+import RecipePage from "./RecipePage";
+
 
 function App() {
   return (
@@ -30,6 +32,7 @@ function App() {
           <Route path="/login" element={<Login />}></Route>
           <Route path="/recipes/new" element={<RecipeForm />}></Route>
           <Route path="/recipes" element={<Home />}></Route>
+          <Route path="/recipe/:recipeId" element={<RecipePage />} />
           <Route path="/favorites" element={<FavoritesPage />}></Route>
           <Route path="/weekplans" element={<WeekPlansDashboard />} />
           <Route path="/planner/:id" element={<WeekPlannerPage />} />
