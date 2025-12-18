@@ -519,7 +519,7 @@ const updateProfile = async (body) => {
   const updateRating = async (recipeId, ratingId, ratingValue) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`http://localhost:5001/recipes/${recipeId}/ratings/${ratingId}`, 
+      await axios.put(`http://localhost:5001/ratings/${ratingId}`, 
         { value: ratingValue },
         {
             headers: { Authorization: `Bearer ${token}` },

@@ -56,12 +56,36 @@ const RecipePage = () => {
         ...recipeData,
       });
 
-      const safeRatings = Array.isArray(recipeData?.ratings)
-        ? recipeData.ratings
-        : [];
+      // Check for user's existing rating - only if user is available
+      if (user) {
+        const safeRatings = Array.isArray(recipeData?.ratings)
+          ? recipeData.ratings
+          : [];
 
-      const existingRating = safeRatings.find(
-        (r) => String(r.userId?._id || r.userId) === String(user?._id)
+        const existingRating = safeRatings.find(
+          (r) => String(r.userId?._id || r.userId) === String(user?._id)
+        );
+
+        if (existingRating) {
+          setUserRating(existingRating.value);
+          setExistingRatingId(existingRating._id);
+        } else {
+          setUserRating(0);
+          setExistingRatingId(null);
+        }
+      }
+    } catch (err) {
+      setError(err.message || "Failed to fetch recipe");
+    } finally {
+      if (!isUpdate) setIsLoading(false);
+    }
+  };
+
+  // Separate effect to update user rating when user becomes available or recipe changes
+  useEffect(() => {
+    if (user && recipe.ratings && recipe.ratings.length > 0) {
+      const existingRating = recipe.ratings.find(
+        (r) => String(r.userId?._id || r.userId) === String(user._id)
       );
 
       if (existingRating) {
@@ -71,18 +95,14 @@ const RecipePage = () => {
         setUserRating(0);
         setExistingRatingId(null);
       }
-    } catch (err) {
-      setError(err.message || "Failed to fetch recipe");
-    } finally {
-      if (!isUpdate) setIsLoading(false);
     }
-  };
+  }, [user, recipe.ratings]);
 
   useEffect(() => {
     if (recipeId) {
       fetchRecipe(false);
     }
-  }, [recipeId, user]);
+  }, [recipeId]);
 
   const handleRatingSubmit = async (ratingValue) => {
     if (!user || isSubmitting) {
