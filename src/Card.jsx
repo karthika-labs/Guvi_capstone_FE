@@ -1,4 +1,4 @@
-import { useState, useContext, useRef } from "react";
+import { useState, useContext, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -7,7 +7,14 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import axios from "axios";
 import ApiContext from "./context/ApiContext";
-import { FaShareAlt, FaWhatsapp, FaTwitter, FaFacebook, FaCopy, FaEllipsisH } from "react-icons/fa";
+import {
+  FaShareAlt,
+  FaWhatsapp,
+  FaTwitter,
+  FaFacebook,
+  FaCopy,
+  FaEllipsisH,
+} from "react-icons/fa";
 
 // Helper functions
 const formatDate = (iso) =>
@@ -37,15 +44,19 @@ export default function Card({ recipe }) {
   const { user, toggleFavorite, isFavorite, getRecipe } =
     useContext(ApiContext);
 
- 
-
   const [showHeart, setShowHeart] = useState(null);
   const favorite = isFavorite(recipe._id);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showShareModal, setShowShareModal] = useState(false); // New state for share modal
+  const [shareMessage, setShareMessage] = useState(""); // New state for share message
 
-  
+  const PUBLIC_URL = window.location.origin;
 
-  const handleFavorite =  () => toggleFavorite(recipe._id);
+  const recipeUrl = `${PUBLIC_URL}/recipe/${recipe._id}`;
+
+
+
+  const handleFavorite = () => toggleFavorite(recipe._id);
 
   const handleLike = async () => {
     try {
@@ -80,7 +91,38 @@ export default function Card({ recipe }) {
     setTimeout(() => setShowHeart(null), 600);
   };
 
- if (!recipe || !recipe._id ||!user) return null;
+  // Share functionality
+  const handleShare = () => {
+    setShowShareModal(true);
+  };
+
+ const handleNativeShare = useCallback(async () => {
+  try {
+    await navigator.share({
+      title: recipe.recipeName,
+      text: "Check out this recipe",
+      url: recipeUrl, //  THIS makes it clickable everywhere
+    });
+  } catch (err) {
+    if (err.name !== "AbortError") {
+      console.error(err);
+    }
+  }
+}, [recipe.recipeName, recipeUrl]);
+
+
+const copyToClipboard = () => {
+  navigator.clipboard.writeText(recipeUrl).then(() => {
+    setShareMessage("Link copied to clipboard!");
+    setTimeout(() => {
+      setShareMessage("");
+      setShowShareModal(false);
+    }, 2000);
+  });
+};
+
+
+  if (!recipe || !recipe._id || !user) return null;
 
   return (
     <div className="rounded-lg border border-[#2d2d2d] bg-[#1a1a1a] shadow-lg overflow-hidden flex flex-col">
@@ -239,23 +281,102 @@ export default function Card({ recipe }) {
             {recipe.averageRating?.toFixed(1) || "0.0"}
           </span>
 
-          {/* share icon */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-            className="h-6 w-6 text-white"
+          <button
+            onClick={handleShare}
+            className="flex items-center text-gray-300 hover:text-[#A100FF]"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
-            />
-          </svg>
+            <FaShareAlt className="h-6 w-6" />
+          </button>
         </div>
       </div>
+      {showShareModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50"
+          onClick={() => setShowShareModal(false)}
+        >
+          <div
+            className="bg-gray-800 p-6 rounded-lg shadow-xl text-center w-11/12 max-w-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold mb-4 text-white">
+              Share this Recipe
+            </h3>
+
+            <div className="flex justify-center gap-5 mb-6 text-4xl">
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                  `Check out this recipe: ${recipe.recipeName}\n${recipeUrl}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-500 hover:scale-110 transition"
+              >
+                <FaWhatsapp />
+              </a>
+
+              <a
+                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                  `Check out this recipe: ${recipe.recipeName}\n${recipeUrl}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:scale-110 transition"
+              >
+                <FaTwitter />
+              </a>
+
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                  `Check out this recipe: ${recipe.recipeName}\n${recipeUrl}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:scale-110 transition"
+              >
+                <FaFacebook />
+              </a>
+              {/* Native Share Button */}
+              {navigator.share && (
+                <button
+                  onClick={handleNativeShare}
+                  className="text-gray-300 hover:text-white hover:scale-110 transition"
+                >
+                  <FaEllipsisH />
+                </button>
+              )}
+            </div>
+
+            <div className="relative mb-3">
+              <input
+                readOnly
+                value={`${window.location.origin}/recipe/${recipe._id}`}
+                className="w-full bg-gray-700 text-white rounded-lg p-2 pr-10 text-sm"
+              />
+              <button
+                onClick={copyToClipboard}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+              >
+                <FaCopy />
+              </button>
+            </div>
+
+            {shareMessage && (
+              <p className="text-green-400 text-sm mt-2">{shareMessage}</p>
+            )}
+
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg w-full"
+            >
+              Close
+            </button>
+            <p className="text-gray-500 text-xs mt-2">
+                Note: Sharing via WhatsApp may not always display the link as
+                clickable depending on the device and app version.
+              </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

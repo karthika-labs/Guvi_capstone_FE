@@ -52,7 +52,9 @@ const RecipePage = () => {
         ingredients: Array.isArray(recipeData?.ingredients)
           ? recipeData.ingredients
           : [],
-        photoUrl: Array.isArray(recipeData?.photoUrl) ? recipeData.photoUrl : [],
+        photoUrl: Array.isArray(recipeData?.photoUrl)
+          ? recipeData.photoUrl
+          : [],
         ...recipeData,
       });
 
@@ -154,10 +156,10 @@ const RecipePage = () => {
   const handleShare = () => {
     setShowShareModal(true);
   };
-  
+
   // Use native Web Share API if available
   const handleNativeShare = useCallback(async () => {
-    const currentRecipeTitle = recipe.recipeName || 'a delicious recipe'; // Fallback title
+    const currentRecipeTitle = recipe.recipeName || "a delicious recipe"; // Fallback title
     const shareData = {
       title: `Check out this recipe: ${currentRecipeTitle}`,
       text: `I found this delicious recipe for ${currentRecipeTitle}!`,
@@ -167,13 +169,16 @@ const RecipePage = () => {
       try {
         await navigator.share(shareData);
       } catch (err) {
-        if (err.name !== 'AbortError') { // User cancelled share
+        if (err.name !== "AbortError") {
+          // User cancelled share
           console.error("Error sharing:", err);
           alert("Failed to share. Please try again.");
         }
       }
     } else {
-      alert("Web Share API is not supported in your browser. You can copy the link instead.");
+      alert(
+        "Web Share API is not supported in your browser. You can copy the link instead."
+      );
     }
   }, [recipe.recipeName]); // Dependency on recipe.recipeName ensures it's available
 
@@ -208,15 +213,17 @@ const RecipePage = () => {
 
   const handleModalPrevImage = (e) => {
     e.stopPropagation(); // Prevent closing modal when clicking next/prev
-    setModalImageIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    setModalImageIndex(
+      (prevIndex) => (prevIndex - 1 + images.length) % images.length
+    );
   };
 
   const ratings = Array.isArray(recipe.ratings) ? recipe.ratings : [];
   const averageRating =
     ratings.length > 0
-      ? (
-          ratings.reduce((sum, r) => sum + r.value, 0) / ratings.length
-        ).toFixed(1)
+      ? (ratings.reduce((sum, r) => sum + r.value, 0) / ratings.length).toFixed(
+          1
+        )
       : "0.0";
 
   if (isLoading) {
@@ -269,7 +276,6 @@ const RecipePage = () => {
                     : videoUrl.replace("watch?v=", "embed/")
                 }?autoplay=0&controls=1&modestbranding=1&rel=0`}
                 className="w-full h-full "
-                
                 frameBorder="0"
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -337,15 +343,54 @@ const RecipePage = () => {
             Share
           </button>
         </div>
-        
+
         {showShareModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50" onClick={() => setShowShareModal(false)}>
-            <div className="bg-gray-800 p-6 rounded-lg shadow-xl text-center w-11/12 max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50"
+            onClick={() => setShowShareModal(false)}
+          >
+            <div
+              className="bg-gray-800 p-6 rounded-lg shadow-xl text-center w-11/12 max-w-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="text-xl font-bold mb-4">Share this Recipe</h3>
               <div className="flex justify-center space-x-4 mb-6 text-4xl items-center flex-wrap">
-                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this recipe: ${recipe.recipeName || 'a delicious recipe'}`)}%0A${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-400 transform hover:scale-110 transition-transform"><FaWhatsapp /></a>
-                <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`Check out this recipe: ${recipe.recipeName || 'a delicious recipe'}`)}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transform hover:scale-110 transition-transform"><FaTwitter /></a>
-                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-500 transform hover:scale-110 transition-transform"><FaFacebook /></a>
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                    `Check out this recipe: ${
+                      recipe.recipeName || "a delicious recipe"
+                    }`
+                  )}%0A${encodeURIComponent(window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-500 hover:text-green-400 transform hover:scale-110 transition-transform"
+                >
+                  <FaWhatsapp />
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                    window.location.href
+                  )}&text=${encodeURIComponent(
+                    `Check out this recipe: ${
+                      recipe.recipeName || "a delicious recipe"
+                    }`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 transform hover:scale-110 transition-transform"
+                >
+                  <FaTwitter />
+                </a>
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                    window.location.href
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-500 transform hover:scale-110 transition-transform"
+                >
+                  <FaFacebook />
+                </a>
                 {/* Native Share Button */}
                 {navigator.share && (
                   <button
@@ -360,12 +405,32 @@ const RecipePage = () => {
                 )}
               </div>
               <div className="relative mb-4">
-                 <input type="text" readOnly value={window.location.href} className="w-full bg-gray-700 text-white rounded-lg p-2 pr-10"/>
-                 <button onClick={copyToClipboard} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"><FaCopy/></button>
+                <input
+                  type="text"
+                  readOnly
+                  value={window.location.href}
+                  className="w-full bg-gray-700 text-white rounded-lg p-2 pr-10"
+                />
+                <button
+                  onClick={copyToClipboard}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  <FaCopy />
+                </button>
               </div>
-               {shareMessage && <p className="text-green-400 mt-2 text-sm">{shareMessage}</p>}
-              <button onClick={() => setShowShareModal(false)} className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 w-full">Close</button>
-              <p className="text-gray-500 text-xs mt-2">Note: Sharing via WhatsApp may not always display the link as clickable depending on the device and app version.</p>
+              {shareMessage && (
+                <p className="text-green-400 mt-2 text-sm">{shareMessage}</p>
+              )}
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 w-full"
+              >
+                Close
+              </button>
+              <p className="text-gray-500 text-xs mt-2">
+                Note: Sharing via WhatsApp may not always display the link as
+                clickable depending on the device and app version.
+              </p>
             </div>
           </div>
         )}
@@ -390,15 +455,24 @@ const RecipePage = () => {
                   Photo Gallery
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {images.map((img, index) => ( // Make gallery images clickable
-                    <div key={index} className="aspect-w-16 aspect-h-9 cursor-pointer" onClick={() => openGalleryModal(index)}>
-                      <img
-                        src={img}
-                        alt={`${recipe.recipeName} photo ${index + 1}`}
-                        className="w-full h-full object-cover rounded-lg transition-transform duration-300 hover:scale-105"
-                      />
-                    </div>
-                  ))}
+                  {images.map(
+                    (
+                      img,
+                      index // Make gallery images clickable
+                    ) => (
+                      <div
+                        key={index}
+                        className="aspect-w-16 aspect-h-9 cursor-pointer"
+                        onClick={() => openGalleryModal(index)}
+                      >
+                        <img
+                          src={img}
+                          alt={`${recipe.recipeName} photo ${index + 1}`}
+                          className="w-full h-full object-cover rounded-lg transition-transform duration-300 hover:scale-105"
+                        />
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
             )}
@@ -471,7 +545,7 @@ const RecipePage = () => {
               )}
             </div>
 
-            <div className="bg-gray-900 p-6 rounded-lg " >
+            <div className="bg-gray-900 p-6 rounded-lg ">
               <h3 className="text-2xl font-bold mb-4">Comments</h3>
               {user ? (
                 <form onSubmit={handleCommentSubmit} className="flex flex-col">
@@ -571,7 +645,10 @@ const RecipePage = () => {
           className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50"
           onClick={() => setShowGalleryModal(false)} // Close on overlay click
         >
-          <div className="relative max-w-screen-lg max-h-screen-lg p-4" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative max-w-screen-lg max-h-screen-lg p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Close Button */}
             <button
               onClick={() => setShowGalleryModal(false)}
