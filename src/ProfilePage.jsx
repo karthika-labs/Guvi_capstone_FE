@@ -258,7 +258,8 @@ import { LogOut, Share2 } from "lucide-react";
 
 const ProfilePage = () => {
   const { userId } = useParams(); // kept as you wanted
-  const { fetchUser, user, updateProfile, favorites } = useContext(ApiContext);
+  const { fetchUser, user, updateProfile, favorites, isUploadingAvatar } =
+    useContext(ApiContext);
 
   const [activeTab, setActiveTab] = useState("recipes");
   const [isEditing, setIsEditing] = useState(false);
@@ -316,6 +317,7 @@ const ProfilePage = () => {
     await updateProfile(formData);
     setIsEditing(false);
   };
+
   const postedRecipes = recipes;
   console.log("postedRecipes:", postedRecipes);
 
@@ -323,18 +325,16 @@ const ProfilePage = () => {
   console.log("likedRecipes:", likedRecipes);
 
   const savedRecipes = favorites || [];
-console.log("savedRecipes:", savedRecipes);
-const gridData = (() => {
-  if (activeTab === "recipes") return postedRecipes;
-  if (activeTab === "liked") return likedRecipes;
+  console.log("savedRecipes:", savedRecipes);
+  const gridData = (() => {
+    if (activeTab === "recipes") return postedRecipes;
+    if (activeTab === "liked") return likedRecipes;
 
-  // saved
-  return savedRecipes
-    .map(item => item.recipeId?.[0])
-    .filter(Boolean);
-})();
+    // saved
+    return savedRecipes.map((item) => item.recipeId?.[0]).filter(Boolean);
+  })();
 
-console.log("gridData:", gridData);
+  console.log("gridData:", gridData);
   return (
     <div className="min-h-screen bg-[#0f0f1a] text-gray-200">
       <div className="max-w-5xl mx-auto px-4 py-12">
@@ -418,12 +418,13 @@ console.log("gridData:", gridData);
                   <>
                     <button
                       onClick={handleSave}
-                      className="px-5 py-2 rounded-full bg-purple-600"
+                      className="px-5 py-2 rounded-full bg-purple-600 disabled:bg-purple-400"
+                      disabled={isUploadingAvatar}
                     >
-                      Save
+                      {isUploadingAvatar ? "Uploading..." : "Save"}
                     </button>
                     <button
-                      onClick={() => setIsEditing(false)}
+                      onClick={() => !isUploadingAvatar && setIsEditing(false)}
                       className="px-5 py-2 rounded-full border border-gray-600"
                     >
                       Cancel
@@ -543,14 +544,12 @@ console.log("gridData:", gridData);
                 className="aspect-square bg-black overflow-hidden"
               >
                 <img
-                  src={recipe.photoUrl?.[0] }
+                  src={recipe.photoUrl?.[0]}
                   alt={recipe.recipeName}
                   className="w-full h-full object-cover"
                 />
               </div>
-              
             ))
-            
           )}
         </div>
       </div>

@@ -9,7 +9,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import RecipeForm from "./recipeForm";
+import RecipeForm from "./RecipeForm";
 import Home from "./Home";
 import { ApiProvider } from "./context/ApiContext";
 import FavoritesPage from "./FavoritesPage";

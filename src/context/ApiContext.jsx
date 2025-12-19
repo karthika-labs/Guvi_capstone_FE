@@ -1,9 +1,36 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import axios from "axios"; // Or your custom instance: import apiClient from '../api/axiosConfig';
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const ApiContext = createContext();
+
+// Cloudinary Constants
+const CLOUD_NAME = "duwrhno5o";
+const UPLOAD_PRESET_RECIPE = "guvi_project_recipe_upload"; // For recipe photos/videos
+const UPLOAD_PRESET_AVATAR = "guvi_project_user_avatar_upload"; // For user profile pictures
+
+// API Constants
+const API_BASE_URL = "http://localhost:5001";
+
+// Utility function to upload image to Cloudinary
+const uploadImageToCloudinary = async (file, cloudName, uploadPreset) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+
+  try {
+    const response = await axios.post(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      formData
+    );
+    return response.data.secure_url;
+  } catch (error) {
+    console.error("Error uploading to Cloudinary:", error);
+    toast.error("Failed to upload image to Cloudinary.");
+    throw error;
+  }
+};
 
 export const ApiProvider = ({ children }) => {
   const [recipes, setRecipes] = useState([]);
@@ -11,6 +38,7 @@ export const ApiProvider = ({ children }) => {
   const [favoritesCount, setFavoritesCount] = useState(0);
   const location = useLocation();
   const [favorites, setFavorites] = useState([]);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Planner + shopping states
   const [weekPlans, setWeekPlans] = useState([]); // list of weeks (dashboard)
@@ -21,7 +49,7 @@ export const ApiProvider = ({ children }) => {
   // get user details
   const fetchUser = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/users/current", {
+      const res = await axios.get(`${API_BASE_URL}/users/current`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setUser(res.data);
@@ -33,34 +61,69 @@ export const ApiProvider = ({ children }) => {
 
   //update user
   // update logged-in user profile
-const updateProfile = async (body) => {
+const updateProfile = async (data) => {
+  const isUploading = data instanceof FormData && data.get("avatar") instanceof File;
+
+  if (isUploading) {
+    setIsUploadingAvatar(true);
+  }
+
   try {
-    const res = await axios.put(
-      "http://localhost:5001/users/me",
-      body,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+    const body = {};
 
-      setUser(res.data); // IMPORTANT: update context user immediately
-      toast.success("Profile updated");
+    // Check if data is FormData and process it
+    if (data instanceof FormData) {
+      // Extract all text fields from FormData
+      for (const [key, value] of data.entries()) {
+        if (typeof value === 'string') {
+          body[key] = value;
+        }
+      }
 
-      return res.data;
-    } catch (err) {
-      console.error(
-        "Error updating profile:",
-        err?.response?.data || err.message
-      );
-      toast.error("Profile update failed");
-      throw err;
+      // Handle the avatar file upload
+      const avatarFile = data.get("avatar");
+      if (avatarFile instanceof File) {
+        const avatarUrl = await uploadImageToCloudinary(
+          avatarFile,
+          CLOUD_NAME,
+          UPLOAD_PRESET_AVATAR
+        );
+        body.avatarUrl = avatarUrl; // Add the new URL to our JSON body
+      }
+    } else {
+      // If it's not FormData, assume it's already a JSON-like object
+      Object.assign(body, data);
     }
-  };
+
+    // At this point, `body` is always a JSON object
+    const res = await axios.put(`${API_BASE_URL}/users/me`, body, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json", // Always send JSON
+      },
+    });
+
+    setUser(res.data); // IMPORTANT: update context user immediately
+    toast.success("Profile updated");
+    console.log("user data updated", res.data);
+    return res.data;
+  } catch (err) {
+    console.error(
+      "Error updating profile:",
+      err?.response?.data || err.message
+    );
+    toast.error("Profile update failed");
+    throw err;
+  } finally {
+    if (isUploading) {
+      setIsUploadingAvatar(false);
+    }
+  }
+};
 
   const getRecipe = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/recipes", {
+      const res = await axios.get(`${API_BASE_URL}/recipes`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -77,7 +140,7 @@ const updateProfile = async (body) => {
     try {
       if (!user?._id) return;
       const res = await axios.get(
-        `http://localhost:5001/favorites/user/${user._id}`,
+        `${API_BASE_URL}/favorites/user/${user._id}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -92,57 +155,39 @@ const updateProfile = async (body) => {
 
   // Toggle favorite
   const toggleFavorite = async (recipeId) => {
+    const isAlreadyFavorite = isFavorite(recipeId);
+    console.log("Already favorite:", isAlreadyFavorite);
+
     try {
-      // 1. Get current list
-      const res = await axios.get(
-        `http://localhost:5001/favorites/user/${user._id}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-
-      //  the actual array
-      const favorites = res.data.favoriteByUser || [];
-
-      const already = favorites.some(
-        (fav) => fav.recipeId?.[0]?._id === recipeId
-      );
-      console.log("Already favorite:", already);
-
-      if (already) {
+      if (isAlreadyFavorite) {
         // DELETE
-        try {
-          await axios.delete(`http://localhost:5001/favorites/${recipeId}`, {
+        await axios.delete(`${API_BASE_URL}/favorites/${recipeId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        console.log("Deleted favorite successfully");
+        toast.info("Removed from favorites");
+      } else {
+        // POST
+        await axios.post(
+          `${API_BASE_URL}/favorites`,
+          { recipeId },
+          {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          });
-          console.log("Deleted favorite successfully");
-        } catch (err) {
-          console.log("Error deleting favorite:", err);
-        }
-      } else {
-        // POST
-        try {
-          await axios.post(
-            `http://localhost:5001/favorites`,
-            { recipeId },
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            }
-          );
-          console.log("Added favorite successfully");
-        } catch (err) {
-          console.log("Error adding favorite:", err);
-        }
+          }
+        );
+        console.log("Added favorite successfully");
+        toast.success("Added to favorites");
       }
 
-      // 2.to  Update  count in ui
-      fetchFavorites();
+      // Re-fetch to ensure UI is in sync with the database
+      await fetchFavorites();
     } catch (err) {
       console.log("Error toggling favorite:", err);
+      toast.error("Could not update favorites.");
     }
   };
 
@@ -156,7 +201,7 @@ const updateProfile = async (body) => {
   // 1) Fetch all week plans for current user (dashboard)
   const fetchWeekPlans = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/plans", {
+      const res = await axios.get(`${API_BASE_URL}/plans`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       // backend returns { getPlan: [...] }
@@ -174,7 +219,7 @@ const updateProfile = async (body) => {
   // body: { weekStartDate: DateString, plans: { monday: {...}, ... } }
   const createWeekPlan = async (body) => {
     try {
-      const res = await axios.post("http://localhost:5001/plans", body, {
+      const res = await axios.post(`${API_BASE_URL}/plans`, body, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
@@ -204,7 +249,7 @@ const updateProfile = async (body) => {
   // 3) Get single week plan by id (detail view)
   const fetchWeekById = async (id) => {
     try {
-      const res = await axios.get(`http://localhost:5001/plans/${id}`, {
+      const res = await axios.get(`${API_BASE_URL}/plans/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       // backend returns { getOnePlan: {...} }
@@ -224,7 +269,7 @@ const updateProfile = async (body) => {
   // PUT /plans/:id with body of the updated plan (client can pass only changed fields)
   const updateWeek = async (id, body) => {
     try {
-      const res = await axios.put(`http://localhost:5001/plans/${id}`, body, {
+      const res = await axios.put(`${API_BASE_URL}/plans/${id}`, body, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setCurrentWeek(res.data.updated || res.data.getOnePlan || null);
@@ -246,7 +291,7 @@ const updateProfile = async (body) => {
     try {
       // note: your route string had a space typo earlier; ensure server route is correct.
       const res = await axios.put(
-        `http://localhost:5001/plans/${id}/day/${day}/meal/${meal}`,
+        `${API_BASE_URL}/plans/${id}/day/${day}/meal/${meal}`,
         { recipeId },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -274,7 +319,7 @@ const updateProfile = async (body) => {
   // 6) Delete week plan
   const deleteWeek = async (id) => {
     try {
-      const res = await axios.delete(`http://localhost:5001/plans/${id}`, {
+      const res = await axios.delete(`${API_BASE_URL}/plans/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setWeekPlans((prev) => prev.filter((w) => w._id !== id));
@@ -292,7 +337,7 @@ const updateProfile = async (body) => {
   const createShoppingList = async (planId) => {
     try {
       const res = await axios.post(
-        `http://localhost:5001/plans/${planId}/lists`,
+        `${API_BASE_URL}/plans/${planId}/lists`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -315,7 +360,7 @@ const updateProfile = async (body) => {
   const fetchShoppingList = async (planId, listId) => {
     try {
       const res = await axios.get(
-        `http://localhost:5001/plans/${planId}/lists/${listId}`,
+        `${API_BASE_URL}/plans/${planId}/lists/${listId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -361,7 +406,7 @@ const updateProfile = async (body) => {
   const updateShoppingList = async (planId, listId, body) => {
     try {
       const res = await axios.put(
-        `http://localhost:5001/plans/${planId}/lists/${listId}`,
+        `${API_BASE_URL}/plans/${planId}/lists/${listId}`,
         body,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -383,7 +428,7 @@ const updateProfile = async (body) => {
   const deleteShoppingList = async (planId, listId) => {
     try {
       const res = await axios.delete(
-        `http://localhost:5001/plans/${planId}/lists/${listId}`,
+        `${API_BASE_URL}/plans/${planId}/lists/${listId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -417,7 +462,7 @@ const updateProfile = async (body) => {
   const removeIngredient = async (planId, listId, itemName) => {
     try {
       const res = await axios.delete(
-        `http://localhost:5001/plans/${planId}/lists/${listId}/ingredient`,
+        `${API_BASE_URL}/plans/${planId}/lists/${listId}/ingredient`,
         {
           data: { itemName },
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -446,20 +491,29 @@ const updateProfile = async (body) => {
       purchased: false,
     };
 
-    // instant UI update (inside this component)
+    // Optimistic UI update
     setShoppingList((prev) => ({
       ...prev,
       lists: [...prev.lists, newItem],
     }));
-
     setManualItem("");
 
-  // backend save
-  await axios.post(
-    `http://localhost:5001/plans/${planId}/lists/${listId}/manual`,
-    newItem,
-    { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }}
-  );
+    try {
+      // backend save
+      await axios.post(
+        `${API_BASE_URL}/plans/${planId}/lists/${listId}/manual`,
+        newItem,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }}
+      );
+    } catch (error) {
+      console.error("Failed to add manual item:", error);
+      toast.error("Failed to save item. Please try again.");
+      // Revert UI change on failure
+      setShoppingList((prev) => ({
+        ...prev,
+        lists: prev.lists.filter((item) => item._id !== newItem._id),
+      }));
+    }
 
     return newItem; // THIS IS IMPORTANT
   };
@@ -467,37 +521,31 @@ const updateProfile = async (body) => {
   // -------------------- effects --------------------
   useEffect(() => {
     fetchUser();
-  }, []);
-
-  useEffect(() => {
-    fetchFavorites();
-  }, [user]);
-
-  useEffect(() => {
     getRecipe();
-  }, [location.pathname]);
+    fetchWeekPlans();
+  }, [location.pathname]); // Re-fetch on route change
 
   useEffect(() => {
-    const loadWeeks = async () => {
-      try {
-        await fetchWeekPlans(); // this should update `weekPlans` in context
-      } catch (err) {
-        console.error("Error fetching weeks:", err);
-      }
-    };
-    loadWeeks();
-  }, []);
+    if (user?._id) {
+      fetchFavorites();
+    } else {
+      // Clear favorites if user logs out
+      setFavorites([]);
+      setFavoritesCount(0);
+    }
+  }, [user]);
 
   const getRecipeById = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:5001/recipes/${id}`, {
+      const res = await axios.get(`${API_BASE_URL}/recipes/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("single Recipe fetched successfully:", res.data.recipe);
       return res.data.recipe;
     } catch (err) {
       console.error("Error fetching recipe by id:", err);
+      toast.error("Could not fetch recipe details.");
       throw err;
     }
   };
@@ -505,7 +553,7 @@ const updateProfile = async (body) => {
   const postRating = async (recipeId, ratingValue) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.post(`http://localhost:5001/recipes/${recipeId}/ratings`, 
+      await axios.post(`${API_BASE_URL}/recipes/${recipeId}/ratings`, 
         { value: ratingValue },
         {
             headers: { Authorization: `Bearer ${token}` },
@@ -519,7 +567,7 @@ const updateProfile = async (body) => {
   const updateRating = async (recipeId, ratingId, ratingValue) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`http://localhost:5001/ratings/${ratingId}`, 
+      await axios.put(`${API_BASE_URL}/ratings/${ratingId}`, 
         { value: ratingValue },
         {
             headers: { Authorization: `Bearer ${token}` },
@@ -533,7 +581,7 @@ const updateProfile = async (body) => {
   const postComment = async (recipeId, commentText) => {
     try {
         const token = localStorage.getItem("token");
-        await axios.post(`http://localhost:5001/recipes/${recipeId}/comments`, 
+        await axios.post(`${API_BASE_URL}/recipes/${recipeId}/comments`, 
         commentText,
         {
             headers: { Authorization: `Bearer ${token}` },
@@ -549,7 +597,7 @@ const updateProfile = async (body) => {
     const query = new URLSearchParams(params).toString();
 
     const res = await axios.get(
-      `http://localhost:5001/recipes/search?${query}`,
+      `${API_BASE_URL}/recipes/search?${query}`,
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -580,6 +628,7 @@ const updateProfile = async (body) => {
         fetchFavorites,
         toggleFavorite,
         isFavorite,
+        isUploadingAvatar,
 
         // planner
         weekPlans,
