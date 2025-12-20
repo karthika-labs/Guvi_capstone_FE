@@ -1,27 +1,68 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 function RecipeForm() {
+  const { recipeId } = useParams();
+  const isEditMode = !!recipeId;
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [toast, setToast] = useState(false);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [initialRecipe, setInitialRecipe] = useState(null);
+
+  // Fetch recipe data if in edit mode
+  useEffect(() => {
+    if (isEditMode && recipeId) {
+      const fetchRecipe = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await axios.get(`http://localhost:5001/recipes/${recipeId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const recipe = res.data.recipe;
+          setInitialRecipe(recipe);
+          
+          // Set form values
+          formik.setValues({
+            recipeName: recipe.recipeName || "",
+            videoUrl: recipe.videoUrl || "",
+            photoUrl: recipe.photoUrl || [],
+            timeDuration: recipe.timeDuration || "",
+            mealType: recipe.mealType || [],
+            foodPreference: recipe.foodPreference || "",
+            ingredients: recipe.ingredients && recipe.ingredients.length > 0 
+              ? recipe.ingredients 
+              : [{ name: "", quantity: "", unit: "" }],
+            instructions: recipe.instructions || "",
+            description: recipe.description || "",
+          });
+        } catch (err) {
+          console.error("Error fetching recipe:", err);
+          setErrorMessage("Failed to load recipe for editing");
+        }
+      };
+      fetchRecipe();
+    }
+  }, [isEditMode, recipeId]);
 
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
-      recipeName: "",
-      videoUrl: "",
-      photoUrl: [],
-      timeDuration: "",
-      mealType: [],
-      foodPreference: "",
-      ingredients: [{ name: "", quantity: "", unit: "" }],
-      instructions: "",
-      description: "",
+      recipeName: initialRecipe?.recipeName || "",
+      videoUrl: initialRecipe?.videoUrl || "",
+      photoUrl: initialRecipe?.photoUrl || [],
+      timeDuration: initialRecipe?.timeDuration || "",
+      mealType: initialRecipe?.mealType || [],
+      foodPreference: initialRecipe?.foodPreference || "",
+      ingredients: initialRecipe?.ingredients && initialRecipe.ingredients.length > 0
+        ? initialRecipe.ingredients
+        : [{ name: "", quantity: "", unit: "" }],
+      instructions: initialRecipe?.instructions || "",
+      description: initialRecipe?.description || "",
     },
 
     validate: (values) => {
@@ -87,22 +128,35 @@ function RecipeForm() {
       }
 
       //  push to formik values
-      values.photoUrl = uploadedUrls;
-      values.videoUrl = videoUrl;
+      values.photoUrl = uploadedUrls.length > 0 ? uploadedUrls : (initialRecipe?.photoUrl || []);
+      values.videoUrl = videoUrl || (initialRecipe?.videoUrl || "");
 
       try {
-        const res = await axios.post("http://localhost:5001/recipes", values, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-
-        setToast(true);
-
-        setTimeout(() => {
-          navigate("/recipes");
-          setToast(false);
-        }, 500);
+        if (isEditMode) {
+          // Update existing recipe
+          const res = await axios.put(`http://localhost:5001/recipes/${recipeId}`, values, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          setToast(true);
+          setTimeout(() => {
+            navigate(`/recipe/${recipeId}`);
+            setToast(false);
+          }, 1500);
+        } else {
+          // Create new recipe
+          const res = await axios.post("http://localhost:5001/recipes", values, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          setToast(true);
+          setTimeout(() => {
+            navigate("/recipes");
+            setToast(false);
+          }, 500);
+        }
 
         console.log("Recipe submitted successfully:", res.data);
       } catch (e) {
@@ -168,7 +222,7 @@ function RecipeForm() {
 
       {toast && (
         <div className="fixed top-5 right-4 bg-green-500 text-white px-4 py-2 rounded shadow">
-          Recipe Submitted Successfully!
+          {isEditMode ? "Recipe Updated Successfully!" : "Recipe Submitted Successfully!"}
         </div>
       )}
       {errorMessage && (
@@ -188,7 +242,7 @@ function RecipeForm() {
           &times;
         </button>
         <h1 className="text-3xl font-bold text-orange-500 text-center mb-6">
-          Add New Recipe
+          {isEditMode ? "Edit Recipe" : "Add New Recipe"}
         </h1>
 
         <div className="grid grid-cols-2 gap-4">
@@ -505,7 +559,7 @@ function RecipeForm() {
             type="submit"
             className="px-4 py-2 cursor-pointer bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-all font-semibold"
           >
-            Submit Recipe
+            {isEditMode ? "Update Recipe" : "Submit Recipe"}
           </button>
 
           {/* refresh form */}

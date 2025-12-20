@@ -7,6 +7,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import axios from "axios";
 import ApiContext from "./context/ApiContext";
+import FollowButton from "./FollowButton";
 import {
   FaShareAlt,
   FaWhatsapp,
@@ -161,7 +162,7 @@ const copyToClipboard = () => {
           </div>
         )}
         {recipe.photoUrl?.length >= 1 && (
-          <span className="absolute z-50 top-2 right-2 bg-black/70 text-[#A100FF] text-xs px-2 py-1 rounded">
+          <span className="absolute z-10 top-2 right-2 bg-black/70 text-[#A100FF] text-xs px-2 py-1 rounded">
             {recipe.photoUrl.length} photos
           </span>
         )}
@@ -169,19 +170,33 @@ const copyToClipboard = () => {
 
       {/* CONTENT */}
       <div className="p-4 flex flex-col gap-3 flex-grow">
-        <div className="flex gap-3 justify-between items-center mb-2">
-          <div className="flex items-center gap-3 sm:flex-col md:flex-col lg:flex-row flex-col">
-            <img
-              src={recipe.avatar || "https://i.pravatar.cc/50"}
-              className="w-8 h-8 rounded-full object-cover"
-            />
-            <div className="text-gray-300 text-xs">
-              <p>{recipe.userId.userName || "Unknown User"}</p>
-              <p className="text-gray-500">{formatDate(recipe.createdAt)}</p>
+        <div className="flex gap-2 items-start mb-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0 pr-2">
+            <Link to={`/profile/${recipe.userId?._id}`} className="flex-shrink-0">
+              <img
+                src={recipe.userId?.avatar || "https://i.pravatar.cc/50"}
+                className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-purple-500 transition"
+              />
+            </Link>
+            <div className="text-gray-300 text-xs flex-1 min-w-0">
+              <Link to={`/profile/${recipe.userId?._id}`} className="hover:text-purple-400 transition block">
+                <p className="font-medium truncate">{recipe.userId?.username || "Unknown User"}</p>
+              </Link>
+              <p className="text-gray-500 truncate">{formatDate(recipe.createdAt)}</p>
             </div>
           </div>
+          
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {recipe.userId?._id && user?._id !== recipe.userId._id && (
+              <div className="flex-shrink-0">
+                <FollowButton 
+                  userId={recipe.userId._id} 
+                  username={recipe.userId.username}
+                />
+              </div>
+            )}
 
-          <div className="relative">
+            <div className="relative flex-shrink-0">
             <button
               onClick={handleLike}
               type="button"
@@ -214,6 +229,7 @@ const copyToClipboard = () => {
                 </span>
               )}
             </button>
+            </div>
           </div>
         </div>
 
@@ -380,3 +396,4 @@ const copyToClipboard = () => {
     </div>
   );
 }
+

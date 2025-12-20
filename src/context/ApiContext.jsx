@@ -35,6 +35,7 @@ const uploadImageToCloudinary = async (file, cloudName, uploadPreset) => {
 export const ApiProvider = ({ children }) => {
   const [recipes, setRecipes] = useState([]);
   const [user, setUser] = useState(null);
+  const [profileUser, setProfileUser] = useState(null); // User whose profile is being viewed
   const [favoritesCount, setFavoritesCount] = useState(0);
   const location = useLocation();
   const [favorites, setFavorites] = useState([]);
@@ -88,7 +89,7 @@ const updateProfile = async (data) => {
           CLOUD_NAME,
           UPLOAD_PRESET_AVATAR
         );
-        body.avatarUrl = avatarUrl; // Add the new URL to our JSON body
+        body.avatar = avatarUrl; // Use 'avatar' key to match backend expectation
       }
     } else {
       // If it's not FormData, assume it's already a JSON-like object
@@ -132,6 +133,20 @@ const updateProfile = async (data) => {
       console.log("Recipes fetched successfully", res.data.recipe);
     } catch (e) {
       console.log("Error while fetching recipes:", e.message);
+    }
+  };
+
+  const getUserRecipes = async (userId) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/users/${userId}/recipes`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      return res.data.recipeList || [];
+    } catch (e) {
+      console.log("Error while fetching user recipes:", e.message);
+      return [];
     }
   };
 
@@ -480,14 +495,14 @@ const updateProfile = async (data) => {
     }
   };
 
-  const addManual = async (planId, listId) => {
+  const addManual = async (planId, listId, unit = "") => {
     if (!manualItem.trim()) return;
 
     const newItem = {
       _id: crypto.randomUUID(),
       itemName: manualItem,
       quantity: 1,
-      unit: "",
+      unit: unit || "",
       purchased: false,
     };
 
@@ -550,6 +565,20 @@ const updateProfile = async (data) => {
     }
   };
 
+  const deleteRecipe = async (recipeId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_BASE_URL}/recipes/${recipeId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success("Recipe deleted successfully");
+    } catch (err) {
+      console.error("Error deleting recipe:", err);
+      toast.error(err.response?.data?.message || "Failed to delete recipe");
+      throw err;
+    }
+  };
+
   const postRating = async (recipeId, ratingValue) => {
     try {
       const token = localStorage.getItem("token");
@@ -592,6 +621,36 @@ const updateProfile = async (data) => {
     }
   };
 
+  const updateComment = async (commentId, commentText) => {
+    try {
+        const token = localStorage.getItem("token");
+        await axios.put(`${API_BASE_URL}/comments/${commentId}`, 
+        { text: commentText },
+        {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+    } catch (err) {
+        console.error("Failed to update comment:", err);
+        toast.error("Failed to update comment");
+        throw err;
+    }
+  };
+
+  const deleteComment = async (commentId) => {
+    try {
+        const token = localStorage.getItem("token");
+        await axios.delete(`${API_BASE_URL}/comments/${commentId}`, 
+        {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        toast.success("Comment deleted successfully");
+    } catch (err) {
+        console.error("Failed to delete comment:", err);
+        toast.error("Failed to delete comment");
+        throw err;
+    }
+  };
+
   const searchRecipes = async (params) => {
     try{
     const query = new URLSearchParams(params).toString();
@@ -615,11 +674,95 @@ const updateProfile = async (data) => {
     
   };
 
+  // Fetch profile user by ID (for viewing other users' profiles)
+  const fetchProfileUser = async (userId) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/users/${userId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setProfileUser(res.data);
+      return res.data;
+    } catch (err) {
+      console.error("Error fetching profile user:", err);
+      toast.error("Could not fetch user profile");
+      throw err;
+    }
+  };
+
+  // Follow a user
+  const followUser = async (userId) => {
+    try {
+      await axios.post(`${API_BASE_URL}/users/${userId}/follow`, {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      toast.success("User followed successfully");
+      // Refresh profile user data
+      if (profileUser?._id === userId) {
+        await fetchProfileUser(userId);
+      }
+      // Also refresh current user data to update following count
+      await fetchUser();
+    } catch (err) {
+      console.error("Error following user:", err);
+      toast.error(err.response?.data?.message || "Could not follow user");
+      throw err;
+    }
+  };
+
+  // Unfollow a user
+  const unfollowUser = async (userId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/users/${userId}/follow`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      toast.success("User unfollowed successfully");
+      // Refresh profile user data
+      if (profileUser?._id === userId) {
+        await fetchProfileUser(userId);
+      }
+      // Also refresh current user data to update following count
+      await fetchUser();
+    } catch (err) {
+      console.error("Error unfollowing user:", err);
+      toast.error(err.response?.data?.message || "Could not unfollow user");
+      throw err;
+    }
+  };
+
+  // Get followers list
+  const getFollowers = async (userId) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/users/${userId}/followers`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      return res.data.followers || [];
+    } catch (err) {
+      console.error("Error fetching followers:", err);
+      toast.error("Could not fetch followers");
+      throw err;
+    }
+  };
+
+  // Get following list
+  const getFollowing = async (userId) => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/users/${userId}/following`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      return res.data.following || [];
+    } catch (err) {
+      console.error("Error fetching following:", err);
+      toast.error("Could not fetch following list");
+      throw err;
+    }
+  };
+
   return (
     <ApiContext.Provider
       value={{
         recipes,
         getRecipe,
+        getUserRecipes,
         user,
         fetchUser,
         updateProfile,
@@ -629,6 +772,14 @@ const updateProfile = async (data) => {
         toggleFavorite,
         isFavorite,
         isUploadingAvatar,
+
+        // profile user (for viewing other users' profiles)
+        profileUser,
+        fetchProfileUser,
+        followUser,
+        unfollowUser,
+        getFollowers,
+        getFollowing,
 
         // planner
         weekPlans,
@@ -652,8 +803,11 @@ const updateProfile = async (data) => {
         setManualItem,
 
         getRecipeById,
+        deleteRecipe,
         postRating,
         postComment,
+        updateComment,
+        deleteComment,
         updateRating,
         searchRecipes,
       }}

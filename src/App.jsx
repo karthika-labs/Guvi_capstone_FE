@@ -3,6 +3,7 @@ import { useState } from "react";
 import "./App.css";
 import Register from "./Register";
 import Login from "./Login";
+import ResetPassword from "./ResetPassword";
 import {
   BrowserRouter as Router,
   Routes,
@@ -19,6 +20,7 @@ import { ToastContainer } from "react-toastify";
 import ShoppingListPage from "./ShoppingListPage";
 import ProfilePage from "./ProfilePage";
 import RecipePage from "./RecipePage";
+import NotFound from "./NotFound";
 
 
 function App() {
@@ -30,7 +32,9 @@ function App() {
           <Route path="/" element={<Navigate to="/register" />}></Route>
           <Route path="/register" element={<Register />}></Route>
           <Route path="/login" element={<Login />}></Route>
+          <Route path="/reset-password/:token" element={<ResetPassword />}></Route>
           <Route path="/recipes/new" element={<RecipeForm />}></Route>
+          <Route path="/recipes/:recipeId/edit" element={<RecipeForm />}></Route>
           <Route path="/recipes" element={<Home />}></Route>
           <Route path="/recipe/:recipeId" element={<RecipePage />} />
           <Route path="/favorites" element={<FavoritesPage />}></Route>
@@ -39,6 +43,7 @@ function App() {
           <Route path="/planner/new" element={<WeekPlannerPage />} />
           <Route path="/planner/:id/list/:listId" element={<ShoppingListPage/>}/>
           <Route path="/profile/:userId?" element={<ProfilePage/>}></Route>
+          <Route path="*" element={<NotFound />}></Route>
         </Routes>
       </ApiProvider>
     </Router>

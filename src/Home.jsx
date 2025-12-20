@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaShareAlt } from "react-icons/fa";
 import RecipeCard from "./RecipeCard";
@@ -6,8 +6,11 @@ import ApiContext from "./context/ApiContext";
 
 function Home() {
   const [searchbar, setSearchbar] = useState(false);
-  const { favoritesCount, user, searchRecipes } = useContext(ApiContext);
+  const { favoritesCount, user, searchRecipes, recipes, getUserRecipes } = useContext(ApiContext);
   const [searchMode, setSearchMode] = useState("name"); // "name" or "ingredients"
+  const [activeTab, setActiveTab] = useState("all"); // "all" or "my"
+  const [myRecipes, setMyRecipes] = useState([]);
+  const [loadingMyRecipes, setLoadingMyRecipes] = useState(false);
 
   const [filters, setFilters] = useState({
     searchText: "",
@@ -15,7 +18,7 @@ function Home() {
     foodPreference: "",
   });
 
-  const [recipes, setRecipes] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // const handleSearch = async () => {
@@ -58,7 +61,7 @@ const handleSearch = async () => {
 
   try {
     const data = await searchRecipes(params);
-    setRecipes(data);
+    setSearchResults(data);
   } catch (err) {
     console.error(err);
   } finally {
@@ -67,15 +70,40 @@ const handleSearch = async () => {
   }
 };
 
+  // Fetch user's recipes when switching to "My Recipes" tab
+  useEffect(() => {
+    if (activeTab === "my" && user?._id) {
+      const fetchMyRecipes = async () => {
+        setLoadingMyRecipes(true);
+        try {
+          const userRecipes = await getUserRecipes(user._id);
+          setMyRecipes(userRecipes);
+        } catch (err) {
+          console.error("Error fetching my recipes:", err);
+        } finally {
+          setLoadingMyRecipes(false);
+        }
+      };
+      fetchMyRecipes();
+    }
+  }, [activeTab, user?._id, getUserRecipes]);
+
+  // Determine which recipes to display
+  const displayRecipes = searchResults.length > 0 
+    ? searchResults 
+    : activeTab === "my" 
+      ? myRecipes 
+      : recipes;
+
 
   return (
     <div className="w-full bg-[#181818] ">
       <div className="flex flex-col items-center w-full max-w-7xl mx-auto justify-center min-h-screen bg-[#181818] text-white">
         <header className="w-full ">
           <nav className=" flex  justify-between py-6 mb-12 border-b border-[#A100FF]">
-            <h2 className="text-3xl mt-4 px-4 font-bold text-[#A100FF] cursor-pointer">
+            <Link to="/recipes" className="text-3xl mt-4 px-4 font-bold text-[#A100FF] cursor-pointer hover:text-purple-400 transition">
               Re<span className="text-4xl font-bold">&lt;</span>ipe !!
-            </h2>
+            </Link>
             <div className="flex  items-center justify-around mr-8">
               <Link
                 to="/recipes/new"
@@ -83,18 +111,44 @@ const handleSearch = async () => {
               >
                 Add New Recipe
               </Link>
+              {/* Week Plans - Always visible, redirects to login if not authenticated */}
               <Link
-                to="/login"
-                className="mt-4 ml-4 inline-block bg-[#A100FF] hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded"
+                to={user ? "/weekplans" : "/login"}
+                className="mt-4 ml-4 inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 px-4 rounded whitespace-nowrap"
+                title={user ? "View Week Plans" : "Login to access Week Plans"}
               >
-                Login
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5 flex-shrink-0"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+                  />
+                </svg>
+                <span>Week Plans</span>
               </Link>
-              <Link
-                to="/register"
-                className="mt-4 ml-4 inline-block bg-[#A100FF] hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded"
-              >
-                Register
-              </Link>
+              {!user && (
+                <>
+                  <Link
+                    to="/login"
+                    className="mt-4 ml-4 inline-block bg-[#A100FF] hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="mt-4 ml-4 inline-block bg-[#A100FF] hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded"
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
               <div className="flex justify-center items-center relative gap-3">
                 <Link
                   to="/favorites"
@@ -277,17 +331,23 @@ const handleSearch = async () => {
                 )}
 
                 {user && (
-                  <Link to={`/profile/${user._id}`}>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="size-6"
-                    >
-                      ...
-                    </svg>
+                  <Link 
+                    to={`/profile/${user._id}`}
+                    className="mt-4 ml-4 inline-block"
+                    title="My Profile"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="relative">
+                        <img
+                          src={user.avatar || "https://i.pravatar.cc/50"}
+                          alt={user.username}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-[#A100FF] hover:border-purple-400 transition cursor-pointer"
+                        />
+                      </div>
+                      <span className="text-xs text-gray-300 mt-1 max-w-[60px] truncate">
+                        {user.username}
+                      </span>
+                    </div>
                   </Link>
                 )}
               </div>
@@ -295,25 +355,87 @@ const handleSearch = async () => {
           </nav>
         </header>
 
-        <section className="flex flex-col items-center px-4 text-center">
-          <h1 className="text-4xl font-bold mb-6">Welcome to Recipe Hub</h1>
-          <p className="text-lg mb-8 text-center max-w-xl">
-            Discover and share amazing recipes from around the world. Whether
-            you're a seasoned chef or just starting out, Recipe Hub is your
-            go-to platform for culinary inspiration.
+        <section className="relative flex flex-col items-center px-4 text-center py-16 overflow-hidden">
+          {/* Animated Background Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-pink-900/20 to-transparent animate-pulse"></div>
+          
+          {/* Animated Welcome Text with typing/printing animation */}
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 relative z-10">
+            <span className="inline-block bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto] animate-typing">Welcome to Recipe Hub!!</span>
+          </h1>
+          
+          {/* Helper Stanza with individual line animations */}
+          <p className="text-lg md:text-xl mb-8 text-center max-w-2xl text-gray-300 leading-relaxed relative z-10">
+            <span className="block mb-2 animate-text-fade-in-1">🍳 Discover culinary treasures from every corner of the globe</span>
+            <span className="block mb-2 animate-text-fade-in-2">👨‍🍳 Share your kitchen masterpieces with a vibrant community</span>
+            <span className="block animate-text-fade-in-3">✨ Plan your meals, create shopping lists, and transform your cooking journey</span>
           </p>
-          <img
-            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cmVjaXBlJTIwZm9vZHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60"
-            alt="Delicious Food"
-            className="w-3/4 max-w-2xl rounded-lg shadow-lg"
-          />
+          
+          {/* Modern Hero Image - Matches Featured Recipes Container Width */}
+          <div className="w-full px-4">
+            <div className="p-4">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl group cursor-pointer w-full">
+                {/* Image with zoom-in on hover */}
+                <div className="overflow-hidden h-[400px] md:h-[500px]">
+                  <img
+                    src="/hero-image.jpg"
+                    alt="Delicious Food Collection"
+                    className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                    onError={(e) => {
+                      // Fallback to online image if local image not found
+                      e.target.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80";
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
         <main>
           <section className="mt-12 w-full px-4">
+            <div className="flex justify-center mb-6">
+              <div className="flex gap-4 bg-[#1a1a2e] rounded-lg p-1 border border-purple-900/40">
+                <button
+                  onClick={() => {
+                    setActiveTab("all");
+                    setSearchResults([]);
+                  }}
+                  className={`px-6 py-2 rounded-lg font-medium transition-all duration-300 ${
+                    activeTab === "all"
+                      ? "bg-purple-600 text-white shadow-lg"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  All Recipes
+                </button>
+                {user && (
+                  <button
+                    onClick={() => {
+                      setActiveTab("my");
+                      setSearchResults([]);
+                    }}
+                    className={`px-6 py-2 rounded-lg font-medium transition-all duration-300 ${
+                      activeTab === "my"
+                        ? "bg-purple-600 text-white shadow-lg"
+                        : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    My Recipes
+                  </button>
+                )}
+              </div>
+            </div>
             <h2 className="text-2xl font-bold mb-6 text-center">
-              Featured Recipes
+              {activeTab === "my" ? "My Recipes" : "Featured Recipes"}
             </h2>
-            <RecipeCard />
+            {loadingMyRecipes ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-600 border-t-transparent"></div>
+                <p className="mt-4 text-gray-400">Loading your recipes...</p>
+              </div>
+            ) : (
+              <RecipeCard recipes={displayRecipes} />
+            )}
           </section>
         </main>
       </div>

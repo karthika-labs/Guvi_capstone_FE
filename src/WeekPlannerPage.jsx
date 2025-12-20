@@ -25,6 +25,24 @@ export default function WeekPlannerPage() {
   const [weekDays, setWeekDays] = useState([]);
   const [expandedDay, setExpandedDay] = useState(null);
   const [currentWeek, setCurrentWeek] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Helper function to get meal count for a day
+  const getMealCount = (dayName) => {
+    if (!currentWeek?.plans?.[dayName.toLowerCase()]) return 0;
+    const dayPlans = currentWeek.plans[dayName.toLowerCase()];
+    const meals = ["breakfast", "lunch", "dinner"];
+    return meals.filter(meal => dayPlans[meal]).length;
+  };
+
+  // Helper function to get meal types for a day
+  const getMealTypes = (dayName) => {
+    if (!currentWeek?.plans?.[dayName.toLowerCase()]) return [];
+    const dayPlans = currentWeek.plans[dayName.toLowerCase()];
+    const meals = ["breakfast", "lunch", "dinner"];
+    return meals.filter(meal => dayPlans[meal]);
+  };
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMealCell, setSelectedMealCell] = useState(null);
@@ -43,23 +61,85 @@ export default function WeekPlannerPage() {
 
   useEffect(() => {
     const loadWeek = async () => {
-      if (!id) return; // create mode → do nothing
+      if (!id) {
+        setLoading(false);
+        return; // create mode → do nothing
+      }
 
-      const week = await fetchWeekById(id);
-      setCurrentWeek(week);
+      setLoading(true);
+      setError(null);
+      
+      try {
+        console.log("Loading week with id:", id);
+        const week = await fetchWeekById(id);
+        console.log("Fetched week data:", week);
+        
+        if (!week) {
+          console.error("Week not found");
+          setError("Week plan not found");
+          setLoading(false);
+          return;
+        }
+        
+        setCurrentWeek(week);
 
-      // Build the 7 days
-      const start = new Date(week.weekStartDate);
-      const days = Array.from({ length: 7 }).map((_, i) => {
-        const d = new Date(start);
-        d.setDate(start.getDate() + i);
-        return {
-          dayName: d.toLocaleDateString("en-US", { weekday: "long" }),
-          date: d.toISOString().split("T")[0],
-        };
-      });
+        // Build the 7 days - normalize to avoid timezone issues
+        if (week.weekStartDate) {
+          const startDateStr = String(week.weekStartDate).trim();
+          console.log("Parsing weekStartDate:", startDateStr);
+          
+          try {
+            const dateParts = startDateStr.split('-');
+            if (dateParts.length === 3) {
+              const year = parseInt(dateParts[0], 10);
+              const month = parseInt(dateParts[1], 10);
+              const day = parseInt(dateParts[2], 10);
+              
+              if (!isNaN(year) && !isNaN(month) && !isNaN(day) && year > 0 && month > 0 && month <= 12 && day > 0 && day <= 31) {
+                const start = new Date(year, month - 1, day); // month is 0-indexed
+                
+                if (!isNaN(start.getTime())) {
+                  const days = Array.from({ length: 7 }).map((_, i) => {
+                    const d = new Date(start);
+                    d.setDate(d.getDate() + i);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return {
+                      dayName: d.toLocaleDateString("en-US", { weekday: "long" }),
+                      date: `${year}-${month}-${day}`,
+                    };
+                  });
 
-      setWeekDays(days);
+                  setWeekDays(days);
+                  console.log("Week days set:", days);
+                } else {
+                  console.error("Invalid date object created");
+                  setError("Invalid date in week plan");
+                }
+              } else {
+                console.error("Invalid date values:", { year, month, day });
+                setError("Invalid date format in week plan");
+              }
+            } else {
+              console.error("Invalid date format (not 3 parts):", startDateStr);
+              setError("Invalid date format");
+            }
+          } catch (error) {
+            console.error("Error parsing weekStartDate:", error);
+            setError("Error parsing date");
+          }
+        } else {
+          console.error("weekStartDate is missing from week:", week);
+          setError("Week start date is missing");
+        }
+      } catch (error) {
+        console.error("Error loading week:", error);
+        setError(error.response?.data?.message || error.message || "Failed to load week plan");
+        toast.error("Failed to load week plan");
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadWeek();
@@ -73,41 +153,87 @@ export default function WeekPlannerPage() {
     if (id) return; // ignore if editing
     if (!selectedDate) return toast.error("Select a start date");
 
+    // Normalize date to avoid timezone issues - extract year, month, day
+    const selected = new Date(selectedDate);
+    const normalizedStartDate = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+
     const newWeekDates = Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date(selectedDate);
+      const d = new Date(normalizedStartDate);
       d.setDate(d.getDate() + i);
-      return d.toISOString().split("T")[0]; // ISO string for comparison
+      // Format as YYYY-MM-DD without timezone conversion
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     });
 
-    // Check overlap with existing weeks
-    const overlap = weekPlans.some((week) => {
-      const weekStart = new Date(week.weekStartDate);
+    // Check overlap with existing weeks and find specific overlapping dates
+    let overlappingWeek = null;
+    let overlappingDates = [];
+
+    for (const week of weekPlans) {
+      // Normalize date to avoid timezone issues
+      const weekStartDateStr = week.weekStartDate;
+      const [year, month, day] = weekStartDateStr.split('-').map(Number);
+      const weekStart = new Date(year, month - 1, day); // month is 0-indexed
+      
       const weekDates = Array.from({ length: 7 }).map((_, i) => {
         const d = new Date(weekStart);
         d.setDate(d.getDate() + i);
-        return d.toISOString().split("T")[0];
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
       });
-      return newWeekDates.some((date) => weekDates.includes(date));
-    });
+      
+      const overlapping = newWeekDates.filter((date) => weekDates.includes(date));
+      if (overlapping.length > 0) {
+        overlappingWeek = week;
+        overlappingDates = overlapping;
+        break; // Found first overlapping week
+      }
+    }
 
-    if (overlap)
+    if (overlappingWeek && overlappingDates.length > 0) {
+      // Format the existing week's date range (start and end only) - normalize to avoid timezone issues
+      const existingWeekStartDateStr = overlappingWeek.weekStartDate;
+      const [year, month, day] = existingWeekStartDateStr.split('-').map(Number);
+      const existingWeekStart = new Date(year, month - 1, day); // month is 0-indexed
+      const existingWeekEnd = new Date(existingWeekStart);
+      existingWeekEnd.setDate(existingWeekEnd.getDate() + 6); // +6 gives 7 days total
+      const existingWeekStartFormatted = existingWeekStart.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      const existingWeekEndFormatted = existingWeekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      
       return toast.error(
-        "Some dates in this week already exist in another week plan"
+        `The dates in this week already exist in the ${existingWeekStartFormatted} - ${existingWeekEndFormatted} plan`
       );
+    }
 
     // Create new week
     try {
-      const formattedDate = selectedDate.toISOString().split("T")[0];
+      // Normalize date to avoid timezone issues
+      const selected = new Date(selectedDate);
+      const normalizedStartDate = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+      
+      // Format as YYYY-MM-DD without timezone conversion
+      const year = normalizedStartDate.getFullYear();
+      const month = String(normalizedStartDate.getMonth() + 1).padStart(2, '0');
+      const day = String(normalizedStartDate.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      
       const week = await createWeekPlan({ weekStartDate: formattedDate });
       setCurrentWeek(week);
 
-      // build 7 days for UI
+      // build 7 days for UI - starting from the selected date
       const days = Array.from({ length: 7 }).map((_, i) => {
-        const d = new Date(formattedDate);
+        const d = new Date(normalizedStartDate);
         d.setDate(d.getDate() + i);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
         return {
           dayName: d.toLocaleDateString("en-US", { weekday: "long" }),
-          date: d.toISOString().split("T")[0],
+          date: `${year}-${month}-${day}`,
         };
       });
       setWeekDays(days);
@@ -132,20 +258,65 @@ export default function WeekPlannerPage() {
 
     const { dayName, meal } = selectedMealCell;
 
-    await updateMeal(currentWeek._id, dayName.toLowerCase(), meal, recipe._id);
+    try {
+      await updateMeal(currentWeek._id, dayName.toLowerCase(), meal, recipe._id);
 
-    const updatedWeek = await fetchWeekById(currentWeek._id);
-    setCurrentWeek(updatedWeek);
+      // Wait a bit to ensure backend has processed the update
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const updatedWeek = await fetchWeekById(currentWeek._id);
+      setCurrentWeek(updatedWeek);
+
+      // Regenerate shopping list to reflect meal changes (preserves existing logic)
+      // Use updatedWeek._id to ensure we're using the latest data
+      try {
+        await createShoppingList(updatedWeek._id);
+        console.log("Shopping list regenerated after adding meal");
+      } catch (err) {
+        console.error("Error regenerating shopping list:", err);
+        // Don't show error toast as this is a background operation
+      }
+
+      toast.success(`${recipe.recipeName} added to ${dayName} ${meal}`);
+    } catch (err) {
+      console.error("Error adding meal:", err);
+      toast.error("Failed to add meal. Please try again.");
+    }
 
     setModalOpen(false);
     setSelectedMealCell(null);
+    // Keep the day expanded after adding a meal
+    setExpandedDay(dayName);
   };
 
   const handleRemoveMeal = async (dayName, meal) => {
-    await updateMeal(currentWeek._id, dayName.toLowerCase(), meal, null);
+    try {
+      await updateMeal(currentWeek._id, dayName.toLowerCase(), meal, null);
 
-    const updatedWeek = await fetchWeekById(currentWeek._id);
-    setCurrentWeek(updatedWeek);
+      // Wait a bit to ensure backend has processed the update
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const updatedWeek = await fetchWeekById(currentWeek._id);
+      setCurrentWeek(updatedWeek);
+
+      // Regenerate shopping list to reflect meal changes (remove deleted recipe ingredients) - preserves existing logic
+      // Use updatedWeek._id to ensure we're using the latest data
+      try {
+        await createShoppingList(updatedWeek._id);
+        console.log("Shopping list regenerated after removing meal");
+      } catch (err) {
+        console.error("Error regenerating shopping list:", err);
+        // Don't show error toast as this is a background operation
+      }
+
+      toast.success(`Meal removed from ${dayName} ${meal}`);
+    } catch (err) {
+      console.error("Error removing meal:", err);
+      toast.error("Failed to remove meal. Please try again.");
+    }
+
+    // Keep the day expanded after removing a meal
+    setExpandedDay(dayName);
   };
 
   const getFilteredRecipes = (mealType) => {
@@ -159,140 +330,303 @@ export default function WeekPlannerPage() {
   };
 
   
-  const handleList = async (id) => {
-   const list= await createShoppingList(id);
-    // await fetchShoppingList(id,list._id);
-    navigate(`/planner/${id}/list/${list._id}`);
+  const handleList = async () => {
+    if (!currentWeek?._id) {
+      toast.error("Please create or select a week plan first");
+      return;
+    }
+    try {
+      const list = await createShoppingList(currentWeek._id);
+      if (list?._id) {
+        navigate(`/planner/${currentWeek._id}/list/${list._id}`);
+      } else {
+        toast.error("Failed to create shopping list");
+      }
+    } catch (err) {
+      console.error("Error creating shopping list:", err);
+      toast.error("Failed to create shopping list");
+    }
   };
 
   // -----------------------------------------
   // UI
   // -----------------------------------------
   return (
-    <div className="flex gap-6 p-6 min-h-screen bg-[#181818] text-white">
-      {/* Left Calendar - only for create mode */}
-
-      {!isEdit && (
-        <div className="w-1/4 bg-[#111] p-4 rounded-xl border border-gray-800">
-          <h2 className="text-white font-semibold text-lg">
-            Select Week Start
-          </h2>
-          <Calendar
-            onChange={setSelectedDate}
-            value={selectedDate}
-            className="react-calendar text-black rounded-lg p-2"
-          />
-          <button
-            onClick={handleSelectWeek}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg mt-2 text-white"
-          >
-            Go
-          </button>
-        </div>
-      )}
-
-      {/* Right Section */}
-      <div className="flex-1 flex flex-col gap-3">
-        <span>
-          <button
-            onClick={() => handleList(id)}
-            className="bg-purple-500 p-1 px-2 rounded"
-          >
-            shoppingList
-          </button>
-        </span>
-        {weekDays.length === 0 ? (
-          <p className="text-gray-400">Select a start date to view the week.</p>
-        ) : (
-          weekDays.map((day) => (
-            <div
-              key={day.date}
-              className="bg-[#111] rounded-xl border border-gray-800"
-            >
-              <div
-                className="flex justify-between items-center p-4 cursor-pointer hover:bg-[#222]"
-                onClick={() =>
-                  setExpandedDay(
-                    expandedDay === day.dayName ? null : day.dayName
-                  )
-                }
+    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#181818] to-[#1a1a2e] text-white">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Week Planner
+              </h1>
+              <p className="text-gray-400 mt-2">Plan your meals for the week</p>
+            </div>
+            {!isEdit && (
+              <Link
+                to="/weekplans"
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition"
               >
+                ← Back to Dashboard
+              </Link>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-6">
+          {/* Left Calendar - only for create mode */}
+          {!isEdit && (
+            <div className="w-80 bg-[#1a1a2e] p-6 rounded-2xl border border-purple-900/40 shadow-xl">
+              <h2 className="text-white font-semibold text-xl mb-4 flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-6 h-6 text-purple-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                Select Week Start
+              </h2>
+              <Calendar
+                onChange={setSelectedDate}
+                value={selectedDate}
+                className="react-calendar text-black rounded-xl p-2 bg-white"
+              />
+              <button
+                onClick={handleSelectWeek}
+                disabled={!selectedDate}
+                className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg text-white font-semibold transition-all duration-200 shadow-lg hover:shadow-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Create Week Plan
+              </button>
+            </div>
+          )}
+
+          {/* Right Section */}
+          <div className="flex-1 flex flex-col gap-4">
+            {currentWeek && (
+              <div className="flex justify-between items-center mb-2">
                 <div>
-                  <p className="font-medium">{day.dayName}</p>
-                  <p className="text-gray-400">{day.date}</p>
+                  <h2 className="text-2xl font-bold text-white">
+                    {isEdit ? "Edit Week Plan" : "Week Plan"}
+                  </h2>
+                  <p className="text-gray-400 text-sm mt-1">
+                    {weekDays.length > 0 && `${weekDays[0].date} - ${weekDays[6]?.date}`}
+                  </p>
                 </div>
-                <div className="text-white text-xl font-bold">+</div>
+                <button
+                  onClick={handleList}
+                  className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg text-white font-semibold transition-all duration-200 shadow-lg hover:shadow-purple-500/50"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                  Shopping List
+                </button>
               </div>
+            )}
+            {loading ? (
+              <div className="bg-[#1a1a2e] rounded-2xl border border-purple-900/40 p-12 text-center">
+                <div className="text-6xl mb-4">⏳</div>
+                <p className="text-gray-400 text-lg">Loading week plan...</p>
+              </div>
+            ) : error ? (
+              <div className="bg-[#1a1a2e] rounded-2xl border border-red-900/40 p-12 text-center">
+                <div className="text-6xl mb-4">❌</div>
+                <p className="text-red-400 text-lg mb-2">Error loading week plan</p>
+                <p className="text-gray-400 text-sm">{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : weekDays.length === 0 ? (
+              <div className="bg-[#1a1a2e] rounded-2xl border border-purple-900/40 p-12 text-center">
+                <div className="text-6xl mb-4">📅</div>
+                <p className="text-gray-400 text-lg">
+                  {!isEdit ? "Select a start date to view the week." : "No week data available"}
+                </p>
+              </div>
+            ) : (
+              weekDays.map((day) => (
+                <div
+                  key={day.date}
+                  className="bg-[#1a1a2e] rounded-2xl border border-purple-900/40 shadow-xl overflow-hidden transition-all duration-200 hover:border-purple-500/50"
+                >
+                  <div
+                    className="flex justify-between items-center p-5 cursor-pointer hover:bg-purple-900/20 transition-colors"
+                    onClick={() =>
+                      setExpandedDay(
+                        expandedDay === day.dayName ? null : day.dayName
+                      )
+                    }
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center font-bold text-lg">
+                        {day.dayName.charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <p className="font-semibold text-lg">{day.dayName}</p>
+                          {getMealCount(day.dayName) > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">
+                                {getMealCount(day.dayName)} meal{getMealCount(day.dayName) > 1 ? 's' : ''} added
+                              </span>
+                              <div className="flex gap-1">
+                                {getMealTypes(day.dayName).map((meal) => (
+                                  <span
+                                    key={meal}
+                                    className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                                      meal === 'breakfast' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                                      meal === 'lunch' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                                      'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                    }`}
+                                  >
+                                    {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-gray-400 text-sm">{day.date}</p>
+                      </div>
+                    </div>
+                    <div className="text-purple-400 text-2xl font-bold transition-transform duration-200">
+                      {expandedDay === day.dayName ? "−" : "+"}
+                    </div>
+                  </div>
 
-              {expandedDay === day.dayName && (
-                <div className="p-4 grid grid-cols-3 gap-4">
-                  {["breakfast", "lunch", "dinner"].map((meal) => {
-                    const data =
-                      currentWeek?.plans?.[day.dayName.toLowerCase()]?.[meal];
+                  {expandedDay === day.dayName && (
+                    <div className="p-5 bg-[#0f0f1a] border-t border-purple-900/40" onClick={(e) => e.stopPropagation()}>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {["breakfast", "lunch", "dinner"].map((meal) => {
+                          const data =
+                            currentWeek?.plans?.[day.dayName.toLowerCase()]?.[meal];
+                          const mealColors = {
+                            breakfast: "from-yellow-500 to-orange-500",
+                            lunch: "from-green-500 to-emerald-500",
+                            dinner: "from-purple-500 to-pink-500",
+                          };
 
-                    return (
-                      <div
-                        key={meal}
-                        onClick={() => handleSelectMeal(day.dayName, meal)}
-                        className="bg-[#1b1b1b] p-4 rounded-xl cursor-pointer hover:bg-[#242424] flex flex-col items-center"
-                      >
-                        {data ? (
-                          <>
-                            <img
-                              src={data.recipeId?.photoUrl?.[0]}
-                              className="w-16 h-16 rounded-md"
-                            />
-                            <p className="text-xs text-center mt-1">
-                              {data.recipeId?.recipeName}
-                            </p>
-                            <button
+                          return (
+                            <div
+                              key={meal}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleRemoveMeal(day.dayName, meal);
+                                handleSelectMeal(day.dayName, meal);
                               }}
-                              className="text-red-500 mt-1 text-xs"
+                              className={`bg-gradient-to-br ${mealColors[meal]} p-4 rounded-xl cursor-pointer hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex flex-col items-center min-h-[180px] justify-center group`}
                             >
-                              Remove
-                            </button>
-                          </>
-                        ) : (
-                          <p className="text-gray-400 capitalize">{meal}</p>
-                        )}
+                              {data ? (
+                                <>
+                                  <img
+                                    src={data.recipeId?.photoUrl?.[0] || "https://via.placeholder.com/100"}
+                                    className="w-20 h-20 rounded-xl object-cover mb-3 shadow-lg border-2 border-white/20"
+                                    alt={data.recipeId?.recipeName}
+                                  />
+                                  <p className="text-white font-semibold text-sm text-center mb-2 line-clamp-2">
+                                    {data.recipeId?.recipeName}
+                                  </p>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveMeal(day.dayName, meal);
+                                    }}
+                                    className="text-white bg-red-500/80 hover:bg-red-600 px-3 py-1 rounded-lg text-xs font-medium transition"
+                                  >
+                                    Remove
+                                  </button>
+                                </>
+                              ) : (
+                                <div className="text-center">
+                                  <div className="text-4xl mb-2">🍽️</div>
+                                  <p className="text-white font-medium capitalize">{meal}</p>
+                                  <p className="text-white/70 text-xs mt-1">Click to add</p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))
-        )}
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {modalOpen && selectedMealCell && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
-          <div className="bg-[#111] p-5 rounded-xl border border-gray-800 w-full max-w-md">
-            <h2 className="mb-3 font-semibold capitalize">
-              Select {selectedMealCell.meal}
-            </h2>
-
-            <div className="max-h-80 overflow-y-auto space-y-3">
-              {getFilteredRecipes(selectedMealCell.meal).map((r) => (
-                <div
-                  key={r._id}
-                  onClick={() => handleMealChosen(r)}
-                  className="bg-[#1a1a1a] p-3 rounded-xl border border-gray-700 cursor-pointer hover:bg-[#2a2a2a]"
-                >
-                  {r.recipeName}
-                </div>
-              ))}
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setModalOpen(false)}>
+          <div className="bg-[#1a1a2e] p-6 rounded-2xl border border-purple-900/40 w-full max-w-2xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold capitalize text-white">
+                Select {selectedMealCell.meal}
+              </h2>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="text-gray-400 hover:text-white transition"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            <button
-              onClick={() => setModalOpen(false)}
-              className="mt-4 w-full bg-red-600 hover:bg-red-500 py-2 rounded-lg"
-            >
-              Close
-            </button>
+            <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
+              {getFilteredRecipes(selectedMealCell.meal).length === 0 ? (
+                <p className="text-gray-400 text-center py-8">No recipes available for {selectedMealCell.meal}</p>
+              ) : (
+                getFilteredRecipes(selectedMealCell.meal).map((r) => (
+                  <div
+                    key={r._id}
+                    onClick={() => handleMealChosen(r)}
+                    className="bg-[#0f0f1a] p-4 rounded-xl border border-purple-900/40 cursor-pointer hover:bg-purple-900/20 hover:border-purple-500/50 transition-all duration-200 flex items-center gap-4 group"
+                  >
+                    <img
+                      src={r.photoUrl?.[0] || "https://via.placeholder.com/80"}
+                      className="w-16 h-16 rounded-lg object-cover"
+                      alt={r.recipeName}
+                    />
+                    <div className="flex-1">
+                      <p className="font-semibold text-white group-hover:text-purple-300 transition">
+                        {r.recipeName}
+                      </p>
+                      {r.description && (
+                        <p className="text-gray-400 text-sm line-clamp-1">{r.description}</p>
+                      )}
+                    </div>
+                    <svg className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}

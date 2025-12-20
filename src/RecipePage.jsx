@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import ApiContext from "./context/ApiContext";
+import FollowButton from "./FollowButton";
+import ConfirmModal from "./ConfirmModal";
 import {
   FaStar,
   FaRegStar,
@@ -11,11 +13,14 @@ import {
   FaFacebook,
   FaCopy,
   FaEllipsisH,
+  FaEdit,
+  FaTrash,
 } from "react-icons/fa";
 
 const RecipePage = () => {
   const { recipeId } = useParams();
-  const { getRecipeById, postRating, updateRating, postComment, user } =
+  const navigate = useNavigate();
+  const { getRecipeById, deleteRecipe, postRating, updateRating, postComment, updateComment, deleteComment, user } =
     useContext(ApiContext);
 
   const [recipe, setRecipe] = useState({
@@ -33,11 +38,14 @@ const RecipePage = () => {
   const [existingRatingId, setExistingRatingId] = useState(null);
   const [hoverRating, setHoverRating] = useState(0);
   const [commentText, setCommentText] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [shareMessage, setShareMessage] = useState("");
   const [showGalleryModal, setShowGalleryModal] = useState(false); // New state for gallery modal
   const [modalImageIndex, setModalImageIndex] = useState(0); // New state for image in gallery modal
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const fetchRecipe = async (isUpdate = false) => {
     if (!isUpdate) setIsLoading(true);
@@ -151,6 +159,71 @@ const RecipePage = () => {
       setIsSubmitting(false);
     }
   };
+
+  const handleEditComment = (comment) => {
+    setEditingCommentId(comment._id);
+    setEditingCommentText(comment.text);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditingCommentText("");
+  };
+
+  const handleUpdateComment = async (commentId) => {
+    if (!editingCommentText.trim()) {
+      alert("Comment cannot be empty.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await updateComment(commentId, editingCommentText);
+      setEditingCommentId(null);
+      setEditingCommentText("");
+      await fetchRecipe(true);
+    } catch (err) {
+      console.error("Failed to update comment:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Are you sure you want to delete this comment?")) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await deleteComment(commentId);
+      await fetchRecipe(true);
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteRecipe = async () => {
+    setShowDeleteModal(false);
+    setIsSubmitting(true);
+    try {
+      await deleteRecipe(recipeId);
+      navigate("/recipes");
+    } catch (err) {
+      console.error("Failed to delete recipe:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditRecipe = () => {
+    navigate(`/recipes/${recipeId}/edit`);
+  };
+
+  // Check if current user is the recipe owner
+  const isRecipeOwner = user && recipe.userId && String(user._id) === String(recipe.userId._id);
 
   // This function will now simply open the share modal.
   const handleShare = () => {
@@ -334,7 +407,27 @@ const RecipePage = () => {
           </Link>
         </div>
 
-        <div className="absolute top-4 right-4 z-20">
+        <div className="absolute top-4 right-4 z-20 flex gap-2">
+          {isRecipeOwner && (
+            <>
+              <button
+                onClick={handleEditRecipe}
+                className="flex items-center px-4 py-2 bg-blue-600 bg-opacity-75 rounded-full text-white hover:bg-blue-700 transition duration-300"
+                title="Edit Recipe"
+              >
+                <FaEdit className="mr-2" />
+                Edit
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center px-4 py-2 bg-red-600 bg-opacity-75 rounded-full text-white hover:bg-red-700 transition duration-300"
+                title="Delete Recipe"
+              >
+                <FaTrash className="mr-2" />
+                Delete
+              </button>
+            </>
+          )}
           <button
             onClick={handleShare}
             className="flex items-center px-4 py-2 bg-gray-800 bg-opacity-75 rounded-full text-white hover:bg-gray-700 transition duration-300"
@@ -501,6 +594,41 @@ const RecipePage = () => {
           </div>
 
           <div className="lg:col-span-1 space-y-8">
+            {/* User Details Section */}
+            {recipe.userId && (
+              <div className="bg-gray-900 p-6 rounded-lg">
+                <h3 className="text-2xl font-bold mb-4">Recipe Creator</h3>
+                <div className="flex items-center gap-4">
+                  <Link to={`/profile/${recipe.userId._id}`}>
+                    <img
+                      src={recipe.userId.avatar || "https://i.pravatar.cc/50"}
+                      alt={recipe.userId.username || "User"}
+                      className="w-16 h-16 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-purple-500 transition"
+                    />
+                  </Link>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <Link 
+                        to={`/profile/${recipe.userId._id}`}
+                        className="hover:text-purple-400 transition"
+                      >
+                        <p className="font-bold text-lg text-white">
+                          {recipe.userId.username || "Unknown User"}
+                        </p>
+                      </Link>
+                      <FollowButton 
+                        userId={recipe.userId._id} 
+                        username={recipe.userId.username || recipe.userId.name}
+                      />
+                    </div>
+                    {recipe.userId.name && (
+                      <p className="text-gray-400 text-sm mt-1">{recipe.userId.name}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="bg-gray-900 p-6 rounded-lg ">
               <h3 className="text-2xl font-bold mb-4">Rate this Recipe</h3>
               <div className="flex items-center text-2xl mb-4">
@@ -575,61 +703,114 @@ const RecipePage = () => {
               )}
               <div className="space-y-4 mt-6 max-h-96 overflow-y-auto pr-2 overflow-y-scroll no-scrollbar">
                 {recipe.comments && recipe.comments.length > 0 ? (
-                  [...recipe.comments].reverse().map((comment) => (
-                    <div
-                      key={comment._id}
-                      className="bg-gray-800 p-4 rounded-lg"
-                    >
-                      <div className="flex items-start space-x-3">
-                        {comment.userId?.avatarUrl ? (
-                          <img
-                            src={comment.userId.avatarUrl}
-                            alt={comment.userId.name}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <FaUserCircle className="w-10 h-10 text-gray-500" />
-                        )}
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                              <p className="font-bold text-white mr-2">
-                                {comment.userId?.name || "Anonymous"}
-                              </p>
-                              {(() => {
-                                const userSpecificRating = ratings.find(
-                                  (r) =>
-                                    String(r.userId?._id || r.userId) ===
-                                    String(comment.userId?._id)
-                                );
-                                if (userSpecificRating) {
-                                  return (
-                                    <div className="flex text-yellow-400 text-sm">
-                                      {[1, 2, 3, 4, 5].map((star) => (
-                                        <FaStar
-                                          key={star}
-                                          className={
-                                            star <= userSpecificRating.value
-                                              ? "text-yellow-400"
-                                              : "text-gray-600"
-                                          }
-                                        />
-                                      ))}
-                                    </div>
+                  [...recipe.comments].reverse().map((comment) => {
+                    const isCommentOwner = user && String(comment.userId?._id || comment.userId) === String(user._id);
+                    const isEditing = editingCommentId === comment._id;
+
+                    return (
+                      <div
+                        key={comment._id}
+                        className="bg-gray-800 p-4 rounded-lg"
+                      >
+                        <div className="flex items-start space-x-3">
+                          {comment.userId?.avatarUrl ? (
+                            <img
+                              src={comment.userId.avatarUrl}
+                              alt={comment.userId.name}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <FaUserCircle className="w-10 h-10 text-gray-500" />
+                          )}
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                <p className="font-bold text-white mr-2">
+                                  {comment.userId?.name || "Anonymous"}
+                                </p>
+                                {(() => {
+                                  const userSpecificRating = ratings.find(
+                                    (r) =>
+                                      String(r.userId?._id || r.userId) ===
+                                      String(comment.userId?._id)
                                   );
-                                }
-                                return null;
-                              })()}
+                                  if (userSpecificRating) {
+                                    return (
+                                      <div className="flex text-yellow-400 text-sm">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                          <FaStar
+                                            key={star}
+                                            className={
+                                              star <= userSpecificRating.value
+                                                ? "text-yellow-400"
+                                                : "text-gray-600"
+                                            }
+                                          />
+                                        ))}
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs text-gray-400">
+                                  {new Date(comment.createdAt).toLocaleDateString()}
+                                </p>
+                                {isCommentOwner && !isEditing && (
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleEditComment(comment)}
+                                      className="text-xs text-blue-400 hover:text-blue-300 transition"
+                                      disabled={isSubmitting}
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteComment(comment._id)}
+                                      className="text-xs text-red-400 hover:text-red-300 transition"
+                                      disabled={isSubmitting}
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            <p className="text-xs text-gray-400">
-                              {new Date(comment.createdAt).toLocaleDateString()}
-                            </p>
+                            {isEditing ? (
+                              <div className="mt-2">
+                                <textarea
+                                  value={editingCommentText}
+                                  onChange={(e) => setEditingCommentText(e.target.value)}
+                                  className="w-full bg-gray-700 text-white p-2 rounded-lg focus:ring-2 focus:ring-red-500 transition mb-2"
+                                  rows="2"
+                                  disabled={isSubmitting}
+                                />
+                                <div className="flex gap-2 justify-end">
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="px-3 py-1 text-sm bg-gray-600 hover:bg-gray-500 rounded text-white transition"
+                                    disabled={isSubmitting}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={() => handleUpdateComment(comment._id)}
+                                    className="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded text-white transition disabled:bg-gray-500"
+                                    disabled={isSubmitting}
+                                  >
+                                    {isSubmitting ? "Saving..." : "Save"}
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-gray-300 mt-1">{comment.text}</p>
+                            )}
                           </div>
-                          <p className="text-gray-300 mt-1">{comment.text}</p>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <p className="text-gray-500">No comments yet.</p>
                 )}
@@ -682,6 +863,18 @@ const RecipePage = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Recipe Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteRecipe}
+        title="Delete Recipe"
+        message={`Are you sure you want to delete "${recipe.recipeName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmColor="bg-red-600 hover:bg-red-700"
+      />
     </div>
   );
 };

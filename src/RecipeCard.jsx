@@ -332,19 +332,27 @@ import ApiContext from "./context/ApiContext";
 
 import Card from "./Card";
 
-export default function RecipeCard() {
-  const { recipes = [] } = useContext(ApiContext);
+export default function RecipeCard({ recipes: propRecipes }) {
+  const { recipes: contextRecipes = [] } = useContext(ApiContext);
+  
+  // Use prop recipes if provided, otherwise use context recipes
+  const recipes = propRecipes || contextRecipes;
 
+  if (recipes.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-400 text-lg">No recipes found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  lg:grid-cols-4 gap-6 p-4">
-
-{recipes
-  .filter(r => r && r._id)
-  .map(recipe => (
-    <Card key={recipe._id} recipe={recipe} />
-  ))}
-
+      {recipes
+        .filter(r => r && r._id)
+        .map(recipe => (
+          <Card key={recipe._id} recipe={recipe} />
+        ))}
     </div>
   );
 }
