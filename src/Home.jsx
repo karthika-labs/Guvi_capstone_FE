@@ -20,6 +20,8 @@ function Home() {
 
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recipesPerPage = 12;
 
   // const handleSearch = async () => {
   //   console.log("call seacrch ");
@@ -62,11 +64,11 @@ const handleSearch = async () => {
   try {
     const data = await searchRecipes(params);
     setSearchResults(data);
+    setSearchbar(false); // Close search page after search
   } catch (err) {
     console.error(err);
   } finally {
     setLoading(false);
-    setSearchbar(false)
   }
 };
 
@@ -89,32 +91,60 @@ const handleSearch = async () => {
   }, [activeTab, user?._id, getUserRecipes]);
 
   // Determine which recipes to display
-  const displayRecipes = searchResults.length > 0 
+  const allDisplayRecipes = searchResults.length > 0 
     ? searchResults 
     : activeTab === "my" 
       ? myRecipes 
       : recipes;
 
+  // Pagination logic
+  const totalPages = Math.ceil(allDisplayRecipes.length / recipesPerPage);
+  const startIndex = (currentPage - 1) * recipesPerPage;
+  const endIndex = startIndex + recipesPerPage;
+  const displayRecipes = allDisplayRecipes.slice(startIndex, endIndex);
+
+  // Reset to page 1 when switching tabs or search results change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchResults.length]);
+
 
   return (
-    <div className="w-full bg-[#181818] ">
-      <div className="flex flex-col items-center w-full max-w-7xl mx-auto justify-center min-h-screen bg-[#181818] text-white">
-        <header className="w-full ">
-          <nav className=" flex  justify-between py-6 mb-12 border-b border-[#A100FF]">
-            <Link to="/recipes" className="text-3xl mt-4 px-4 font-bold text-[#A100FF] cursor-pointer hover:text-purple-400 transition">
-              Re<span className="text-4xl font-bold">&lt;</span>ipe !!
+    <div className="w-full bg-gradient-to-b from-[#0a0a0a] via-[#181818] to-[#0a0a0a] min-h-screen">
+      <div className="flex flex-col items-center w-full max-w-7xl mx-auto justify-center min-h-screen text-white">
+        <header className="w-full sticky top-0 z-40 backdrop-blur-md bg-[#0a0a0a]/80 border-b border-purple-900/30 shadow-lg">
+          <nav className="flex justify-between items-center py-4 px-4 md:px-8 mb-8">
+            <Link 
+              to="/recipes" 
+              className="flex items-center gap-2 text-2xl md:text-3xl font-bold text-[#A100FF] cursor-pointer hover:text-purple-400 transition-all ease-in-out duration-300"
+            >
+              {/* Logo Icon */}
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="w-8 h-8 md:w-10 md:h-10 text-[#A100FF]" 
+                fill="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+              <span className="bg-gradient-to-r from-[#A100FF] via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Recipe<span className="text-[#A100FF]">&lt;</span>Hub
+              </span>
             </Link>
-            <div className="flex  items-center justify-around mr-8">
+            <div className="flex items-center justify-center gap-3 md:gap-4">
               <Link
                 to="/recipes/new"
-                className="mt-4 inline-block bg-[#A100FF] hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded"
+                className="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-[#A100FF] to-purple-600 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 cursor-pointer"
               >
-                Add New Recipe
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add Recipe</span>
               </Link>
               {/* Week Plans - Always visible, redirects to login if not authenticated */}
               <Link
                 to={user ? "/weekplans" : "/login"}
-                className="mt-4 ml-4 inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 px-4 rounded whitespace-nowrap"
+                className="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 whitespace-nowrap cursor-pointer"
                 title={user ? "View Week Plans" : "Login to access Week Plans"}
               >
                 <svg
@@ -135,32 +165,33 @@ const handleSearch = async () => {
               </Link>
               {!user && (
                 <>
-                  <Link
-                    to="/login"
-                    className="mt-4 ml-4 inline-block bg-[#A100FF] hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="mt-4 ml-4 inline-block bg-[#A100FF] hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded"
-                  >
-                    Register
-                  </Link>
+              <Link
+                to="/login"
+                    className="hidden md:inline-block bg-gradient-to-r from-[#A100FF] to-purple-600 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 cursor-pointer"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                    className="hidden md:inline-block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 cursor-pointer"
+              >
+                Register
+              </Link>
                 </>
               )}
-              <div className="flex justify-center items-center relative gap-3">
+              <div className="flex justify-center items-center relative gap-2 md:gap-4">
                 <Link
                   to="/favorites"
-                  className="mt-4 ml-6 inline-block text-white font-semibold py-2 px-4 rounded relative"
+                  className="relative p-2 rounded-lg hover:bg-purple-900/30 transition-all ease-in-out duration-300 group cursor-pointer"
+                  title="Favorites"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
-                    strokeWidth={1.5}
+                    strokeWidth={2}
                     stroke="currentColor"
-                    className="size-6  ml-6 cursor-pointer hover:text-purple-500 transition-all "
+                    className="w-6 h-6 text-gray-300 group-hover:text-purple-400 transition-all duration-300"
                   >
                     <path
                       strokeLinecap="round"
@@ -169,20 +200,23 @@ const handleSearch = async () => {
                     />
                   </svg>
                   {favoritesCount > 0 && (
-                    <span className="absolute -top-1 right-2 bg-[#A100FF] text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-[#A100FF] to-pink-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg animate-pulse">
                       {favoritesCount}
                     </span>
                   )}
                 </Link>
-                <button>
+                <button
+                  onClick={() => setSearchbar((prev) => !prev)}
+                  className="p-2 rounded-lg hover:bg-purple-900/30 transition-all ease-in-out duration-300 group cursor-pointer"
+                  title="Toggle Search"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
-                    strokeWidth={1.5}
+                    strokeWidth={2}
                     stroke="currentColor"
-                    className="size-6 ml-6 cursor-pointer hover:text-purple-500 transition-all "
-                    onClick={() => setSearchbar((prev) => !prev)}
+                    className="w-6 h-6 text-gray-300 group-hover:text-purple-400 transition-all duration-300"
                   >
                     <path
                       strokeLinecap="round"
@@ -191,163 +225,35 @@ const handleSearch = async () => {
                     />
                   </svg>
                 </button>
-                {searchbar && (
-                  <div className="fixed inset-0 bg-black/90 flex justify-center items-center z-50 p-4 transition-opacity duration-300">
-                    {/* Close Button */}
-                    <button
-                      className="absolute top-5 left-5 bg-[#A100FF] hover:bg-purple-700 text-white p-2 rounded-full transition duration-300 hover:scale-110"
-                      onClick={() => setSearchbar(false)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-5 h-5"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-
-                    <div className="w-full max-w-5xl bg-[#1a1a2e] border border-purple-900/40 rounded-2xl p-6 shadow-lg">
-                      {/* Search Mode Toggle */}
-                      <div className="mb-6 flex flex-col items-center">
-                        <div className="flex items-center gap-3 bg-[#0f0f1a] rounded-full p-1 border border-purple-900/40">
-                          <button
-                            onClick={() => setSearchMode("name")}
-                            className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
-                              searchMode === "name"
-                                ? "bg-purple-600 text-white shadow-lg"
-                                : "text-gray-400 hover:text-white"
-                            }`}
-                          >
-                            Recipe Name
-                          </button>
-                          <button
-                            onClick={() => setSearchMode("ingredients")}
-                            className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
-                              searchMode === "ingredients"
-                                ? "bg-purple-600 text-white shadow-lg"
-                                : "text-gray-400 hover:text-white"
-                            }`}
-                          >
-                            Ingredients
-                          </button>
-                        </div>
-                        <p className="text-gray-400 text-sm mt-2">
-                          {searchMode === "name"
-                            ? "Search by recipe name (e.g., biryani, pasta)"
-                            : "Search by ingredients you have (e.g., paneer, tomato, onion)"}
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {/* Recipe name */}
-                        <div className="relative col-span-1 md:col-span-2">
-                          <input
-                            type="text"
-                            placeholder={
-                              searchMode === "name"
-                                ? "Enter recipe name (e.g., biryani, pasta)"
-                                : "Enter ingredients (e.g., paneer, tomato, onion)"
-                            }
-                            value={filters.searchText}
-                            onChange={(e) =>
-                              setFilters({ ...filters, searchText: e.target.value })
-                            }
-                            className="col-span-1 md:col-span-3 w-full py-3 px-4 pl-11 rounded-xl
-             bg-[#0f0f1a] text-white placeholder-gray-400
-             focus:outline-none focus:ring-2 focus:ring-purple-600"
-                          />
-
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-400">
-                            🔍
-                          </span>
-                        </div>
-
-                        {/* Meal type */}
-                        <select
-                          value={filters.mealType}
-                          onChange={(e) =>
-                            setFilters({ ...filters, mealType: e.target.value })
-                          }
-                          className="w-full py-3 px-4 rounded-xl bg-[#0f0f1a] text-white
-                     border border-purple-900/40 focus:ring-2 focus:ring-purple-600"
-                        >
-                          <option value="">All Meals</option>
-                          <option value="Breakfast">Breakfast</option>
-                          <option value="Lunch">Lunch</option>
-                          <option value="Dinner">Dinner</option>
-                        </select>
-
-                        {/* Food preference */}
-                        <select
-                          value={filters.foodPreference}
-                          onChange={(e) =>
-                            setFilters({
-                              ...filters,
-                              foodPreference: e.target.value,
-                            })
-                          }
-                          className="w-full py-3 px-4 rounded-xl bg-[#0f0f1a] text-white
-                     border border-purple-900/40 focus:ring-2 focus:ring-purple-600"
-                        >
-                          <option value="">All</option>
-                          <option value="Veg">Veg</option>
-                          <option value="Non-Veg">Non-Veg</option>
-                        </select>
-
-                        {/* Ingredients */}
-                        {/* <input
-                          type="text"
-                          placeholder="Ingredients (comma separated)"
-                          value={filters.ingredients}
-                          onChange={(e) =>
-                            setFilters({
-                              ...filters,
-                              ingredients: e.target.value,
-                            })
-                          }
-                          className="col-span-1 md:col-span-3 w-full py-3 px-4 rounded-xl
-                     bg-[#0f0f1a] text-white placeholder-gray-400
-                     focus:outline-none focus:ring-2 focus:ring-purple-600"
-                        /> */}
-
-                        {/* Search button */}
-                        <button
-                          onClick={handleSearch}
-                          className="col-span-1 py-3 px-6 rounded-xl font-semibold
-                     bg-purple-600 hover:bg-purple-700
-                     transition duration-300 hover:scale-105 text-white"
-                        >
-                          Search
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {user && (
                   <Link 
                     to={`/profile/${user._id}`}
-                    className="mt-4 ml-4 inline-block"
+                    className="flex flex-col items-center group"
                     title="My Profile"
                   >
-                    <div className="flex flex-col items-center">
-                      <div className="relative">
+                    <div className="relative">
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#A100FF] to-pink-600 opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300"></div>
+                      {user.avatar ? (
                         <img
-                          src={user.avatar || "https://i.pravatar.cc/50"}
+                          src={user.avatar}
                           alt={user.username}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-[#A100FF] hover:border-purple-400 transition cursor-pointer"
+                          className="relative w-10 h-10 rounded-full object-cover border-2 border-[#A100FF] group-hover:border-purple-400 transition-all duration-300 group-hover:scale-110"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextElementSibling.style.display = 'flex';
+                          }}
                         />
+                      ) : null}
+                      <div className={`relative w-10 h-10 rounded-full border-2 border-[#A100FF] group-hover:border-purple-400 transition-all duration-300 group-hover:scale-110 bg-[#1a1a2e] flex items-center justify-center ${user.avatar ? 'hidden' : ''}`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
                       </div>
-                      <span className="text-xs text-gray-300 mt-1 max-w-[60px] truncate">
-                        {user.username}
-                      </span>
                     </div>
+                    <span className="text-xs text-gray-300 mt-1 max-w-[60px] truncate group-hover:text-purple-400 transition-colors duration-300">
+                      {user.username}
+                    </span>
                   </Link>
                 )}
               </div>
@@ -355,58 +261,213 @@ const handleSearch = async () => {
           </nav>
         </header>
 
-        <section className="relative flex flex-col items-center px-4 text-center py-16 overflow-hidden">
-          {/* Animated Background Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-pink-900/20 to-transparent animate-pulse"></div>
+        <section className="relative flex flex-col items-center px-4 text-center py-12 md:py-16 overflow-hidden">
+          {/* Animated Background Gradient with particles effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-pink-900/20 to-transparent"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(161,0,255,0.1),transparent_50%)] animate-pulse"></div>
           
           {/* Animated Welcome Text with typing/printing animation */}
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 relative z-10">
-            <span className="inline-block bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto] animate-typing">Welcome to Recipe Hub!!</span>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 relative z-10">
+            <span className="inline-block bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto] animate-typing drop-shadow-2xl">
+              Welcome to Recipe Hub!!
+            </span>
           </h1>
           
           {/* Helper Stanza with individual line animations */}
-          <p className="text-lg md:text-xl mb-8 text-center max-w-2xl text-gray-300 leading-relaxed relative z-10">
-            <span className="block mb-2 animate-text-fade-in-1">🍳 Discover culinary treasures from every corner of the globe</span>
-            <span className="block mb-2 animate-text-fade-in-2">👨‍🍳 Share your kitchen masterpieces with a vibrant community</span>
-            <span className="block animate-text-fade-in-3">✨ Plan your meals, create shopping lists, and transform your cooking journey</span>
-          </p>
+          <div className="text-base md:text-lg lg:text-xl mb-10 text-center max-w-3xl text-gray-300 leading-relaxed relative z-10 space-y-3">
+            <p className="block animate-text-fade-in-1 transform hover:scale-105 transition-transform duration-300">
+              🍳 Discover culinary treasures from every corner of the globe
+            </p>
+            <p className="block animate-text-fade-in-2 transform hover:scale-105 transition-transform duration-300">
+              👨‍🍳 Share your kitchen masterpieces with a vibrant community
+            </p>
+            <p className="block animate-text-fade-in-3 transform hover:scale-105 transition-transform duration-300">
+              ✨ Plan your meals, create shopping lists, and transform your cooking journey
+            </p>
+          </div>
           
           {/* Modern Hero Image - Matches Featured Recipes Container Width */}
-          <div className="w-full px-4">
-            <div className="p-4">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl group cursor-pointer w-full">
-                {/* Image with zoom-in on hover */}
-                <div className="overflow-hidden h-[400px] md:h-[500px]">
-                  <img
-                    src="/hero-image.jpg"
-                    alt="Delicious Food Collection"
-                    className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-                    onError={(e) => {
-                      // Fallback to online image if local image not found
-                      e.target.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80";
-                    }}
-                  />
-                </div>
+          <div className="w-full px-4 max-w-6xl">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl group cursor-pointer w-full border-2 border-purple-900/30">
+              {/* Gradient overlay on hover */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
+              {/* Image with zoom-in on hover */}
+              <div className="overflow-hidden h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
+                <img
+                  src="/hero-image.jpg"
+                  alt="Delicious Food Collection"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  onError={(e) => {
+                    e.target.src = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80";
+                  }}
+                />
+              </div>
+              {/* Floating badge */}
+              <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-purple-600/90 to-pink-600/90 backdrop-blur-sm px-4 py-2 rounded-full text-white font-semibold text-sm shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                🎉 Explore Recipes
               </div>
             </div>
           </div>
         </section>
-        <main>
-          <section className="mt-12 w-full px-4">
-            <div className="flex justify-center mb-6">
-              <div className="flex gap-4 bg-[#1a1a2e] rounded-lg p-1 border border-purple-900/40">
+        {/* Full Page Search Interface */}
+        {searchbar && (
+          <div className="fixed inset-0 bg-gradient-to-b from-[#0a0a0a] via-[#181818] to-[#0a0a0a] z-50 overflow-y-auto">
+            <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+              {/* Close Button */}
+              <button
+                className="absolute top-6 right-6 bg-[#A100FF] hover:bg-purple-700 text-white p-3 rounded-full transition-all ease-in-out duration-300 hover:scale-110 shadow-lg z-10 cursor-pointer"
+                onClick={() => setSearchbar(false)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-6 h-6"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+
+              <div className="w-full max-w-5xl">
+                {/* Search Title */}
+                <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                  Search Recipes
+                </h2>
+                <p className="text-gray-400 text-center mb-8 text-lg">
+                  Find your perfect recipe
+                </p>
+
+                {/* Search Mode Toggle */}
+                <div className="mb-8 flex flex-col items-center">
+                  <div className="flex items-center gap-3 bg-[#0f0f1a] rounded-full p-1 border border-purple-900/40">
+                    <button
+                      onClick={() => setSearchMode("name")}
+                      className={`px-8 py-3 rounded-full font-semibold transition-all ease-in-out duration-300 cursor-pointer ${
+                        searchMode === "name"
+                          ? "bg-purple-600 text-white shadow-lg"
+                          : "text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      Recipe Name
+                    </button>
+                    <button
+                      onClick={() => setSearchMode("ingredients")}
+                      className={`px-8 py-3 rounded-full font-semibold transition-all ease-in-out duration-300 cursor-pointer ${
+                        searchMode === "ingredients"
+                          ? "bg-purple-600 text-white shadow-lg"
+                          : "text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      Ingredients
+                    </button>
+                  </div>
+                  <p className="text-gray-400 text-base mt-4 text-center">
+                    {searchMode === "name"
+                      ? "Search by recipe name (e.g., biryani, pasta)"
+                      : "Search by ingredients you have (e.g., paneer, tomato, onion)"}
+                  </p>
+                </div>
+
+                {/* Search Form */}
+                <div className="bg-[#1a1a2e] border border-purple-900/40 rounded-2xl p-8 shadow-2xl">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    {/* Search Input */}
+                    <div className="relative col-span-1 md:col-span-2">
+                      <input
+                        type="text"
+                        placeholder={
+                          searchMode === "name"
+                            ? "Enter recipe name (e.g., biryani, pasta)"
+                            : "Enter ingredients (e.g., paneer, tomato, onion)"
+                        }
+                        value={filters.searchText}
+                        onChange={(e) =>
+                          setFilters({ ...filters, searchText: e.target.value })
+                        }
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSearch();
+                          }
+                        }}
+                        autoFocus
+                        className="w-full py-4 px-5 pl-14 rounded-xl bg-[#0f0f1a] text-white placeholder-gray-400 text-lg focus:outline-none focus:ring-2 focus:ring-purple-600 border border-purple-900/40"
+                      />
+                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-purple-400 text-xl">
+                        🔍
+                      </span>
+                    </div>
+
+                    {/* Meal type */}
+                    <select
+                      value={filters.mealType}
+                      onChange={(e) =>
+                        setFilters({ ...filters, mealType: e.target.value })
+                      }
+                      className="w-full py-4 px-5 rounded-xl bg-[#0f0f1a] text-white text-lg border border-purple-900/40 focus:ring-2 focus:ring-purple-600"
+                    >
+                      <option value="">All Meals</option>
+                      <option value="Breakfast">Breakfast</option>
+                      <option value="Lunch">Lunch</option>
+                      <option value="Dinner">Dinner</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {/* Food preference */}
+                    <select
+                      value={filters.foodPreference}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          foodPreference: e.target.value,
+                        })
+                      }
+                      className="w-full py-4 px-5 rounded-xl bg-[#0f0f1a] text-white text-lg border border-purple-900/40 focus:ring-2 focus:ring-purple-600"
+                    >
+                      <option value="">All Preferences</option>
+                      <option value="Veg">Veg</option>
+                      <option value="Non-Veg">Non-Veg</option>
+                    </select>
+
+                    {/* Search Button */}
+                    <button
+                      onClick={handleSearch}
+                      disabled={loading}
+                      className="w-full py-4 px-6 rounded-xl font-bold text-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all ease-in-out duration-300 hover:scale-[1.02] text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      {loading ? "Searching..." : "Search Recipes"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <main className="w-full">
+          <section className="mt-8 md:mt-12 w-full px-4">
+            <div className="flex flex-col items-center gap-6 mb-8">
+              {/* Enhanced Tab Switcher */}
+              <div className="flex gap-2 bg-[#1a1a2e] rounded-xl p-1.5 border border-purple-900/40 shadow-lg">
                 <button
                   onClick={() => {
                     setActiveTab("all");
                     setSearchResults([]);
                   }}
-                  className={`px-6 py-2 rounded-lg font-medium transition-all duration-300 ${
+                  className={`px-6 py-2.5 rounded-lg font-semibold transition-all ease-in-out duration-300 relative cursor-pointer ${
                     activeTab === "all"
-                      ? "bg-purple-600 text-white shadow-lg"
-                      : "text-gray-400 hover:text-white"
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105"
+                      : "text-gray-400 hover:text-white hover:bg-purple-900/20"
                   }`}
                 >
                   All Recipes
+                  {activeTab === "all" && (
+                    <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></span>
+                  )}
                 </button>
                 {user && (
                   <button
@@ -414,27 +475,140 @@ const handleSearch = async () => {
                       setActiveTab("my");
                       setSearchResults([]);
                     }}
-                    className={`px-6 py-2 rounded-lg font-medium transition-all duration-300 ${
+                    className={`px-6 py-2.5 rounded-lg font-semibold transition-all ease-in-out duration-300 relative cursor-pointer ${
                       activeTab === "my"
-                        ? "bg-purple-600 text-white shadow-lg"
-                        : "text-gray-400 hover:text-white"
+                        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105"
+                        : "text-gray-400 hover:text-white hover:bg-purple-900/20"
                     }`}
                   >
                     My Recipes
+                    {activeTab === "my" && (
+                      <span className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></span>
+                    )}
                   </button>
                 )}
               </div>
-            </div>
-            <h2 className="text-2xl font-bold mb-6 text-center">
-              {activeTab === "my" ? "My Recipes" : "Featured Recipes"}
+              
+              {/* Enhanced Section Title */}
+              <div className="text-center">
+                <h2 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                  {activeTab === "my" ? "My Recipes" : "Featured Recipes"}
             </h2>
+                <p className="text-gray-400 text-sm md:text-base">
+                  {activeTab === "my" 
+                    ? "Recipes you've created and shared" 
+                    : "Discover amazing recipes from our community"}
+                </p>
+              </div>
+            </div>
             {loadingMyRecipes ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-600 border-t-transparent"></div>
-                <p className="mt-4 text-gray-400">Loading your recipes...</p>
+              <div className="text-center py-16">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent mb-4"></div>
+                <p className="text-gray-400 text-lg">Loading your recipes...</p>
+                <div className="mt-4 flex justify-center gap-2">
+                  <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                  <div className="w-2 h-2 bg-pink-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+              </div>
+            ) : displayRecipes.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="inline-block p-6 bg-gradient-to-br from-purple-900/20 to-pink-900/20 rounded-full mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-300 mb-2">
+                  {activeTab === "my" ? "No Recipes Yet" : "No Recipes Found"}
+                </h3>
+                <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                  {activeTab === "my" 
+                    ? "Start sharing your culinary creations with the community!" 
+                    : searchResults.length > 0 
+                      ? "Try adjusting your search filters"
+                      : "Be the first to add a recipe!"}
+                </p>
+                {activeTab === "my" && user && (
+                  <Link
+                    to="/recipes/new"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-[#A100FF] to-purple-600 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Your First Recipe
+                  </Link>
+                )}
               </div>
             ) : (
-              <RecipeCard recipes={displayRecipes} />
+              <>
+                <RecipeCard recipes={displayRecipes} />
+                
+                {/* Pagination - Netflix Style */}
+                {allDisplayRecipes.length > recipesPerPage && (
+                  <div className="flex justify-center items-center gap-4 mt-8 mb-4">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="flex items-center justify-center w-10 h-10 bg-[#1a1a2e] hover:bg-purple-600/30 border border-purple-500/30 rounded-lg text-white transition-all ease-in-out duration-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-[#1a1a2e] cursor-pointer"
+                      aria-label="Previous page"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    
+                    {/* Page Indicator - Netflix Style */}
+                    <div className="flex items-center gap-2 px-4 py-2 bg-[#1a1a2e] border border-purple-500/30 rounded-lg">
+                      <span className="text-white font-semibold">
+                        {currentPage}
+                      </span>
+                      <span className="text-gray-400">/</span>
+                      <span className="text-gray-400">
+                        {totalPages}
+                      </span>
+                    </div>
+                    
+                    {/* Next Button */}
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="flex items-center justify-center w-10 h-10 bg-[#1a1a2e] hover:bg-purple-600/30 border border-purple-500/30 rounded-lg text-white transition-all ease-in-out duration-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-[#1a1a2e] cursor-pointer"
+                      aria-label="Next page"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+            </div>
+                )}
+                
+                {/* Enhanced Page info */}
+                {allDisplayRecipes.length > 0 && (
+                  <div className="text-center mt-6">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#1a1a2e] border border-purple-900/40 rounded-lg">
+                      <span className="text-gray-300 text-sm">
+                        Showing <span className="text-purple-400 font-semibold">{startIndex + 1}</span> - <span className="text-purple-400 font-semibold">{Math.min(endIndex, allDisplayRecipes.length)}</span> of <span className="text-pink-400 font-semibold">{allDisplayRecipes.length}</span> recipes
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </section>
         </main>

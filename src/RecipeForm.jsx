@@ -210,38 +210,40 @@ function RecipeForm() {
   const removeVideo = () => setSelectedVideo(null);
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e] shadow-lg text-[#f5f5f5] flex justify-center items-center p-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#0f0f1a] text-gray-200 flex justify-center items-center p-8">
       {loading && (
         <div className="fixed inset-0 bg-black/70 flex flex-col justify-center items-center z-50">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#A100FF] border-t-transparent"></div>
-          <p className="mt-4 text-[#A100FF] text-lg font-semibold">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-600 border-t-transparent"></div>
+          <p className="mt-4 text-purple-400 text-lg font-semibold">
             Uploading... Please wait
           </p>
         </div>
       )}
 
       {toast && (
-        <div className="fixed top-5 right-4 bg-green-500 text-white px-4 py-2 rounded shadow">
+        <div className="fixed top-5 right-4 bg-green-500 text-white px-4 py-2 rounded shadow z-50">
           {isEditMode ? "Recipe Updated Successfully!" : "Recipe Submitted Successfully!"}
         </div>
       )}
       {errorMessage && (
-        <p className="text-red-500 text-center mb-3 absolute top-20">
+        <p className="text-red-400 text-center mb-3 absolute top-20 left-1/2 transform -translate-x-1/2 z-40">
           {errorMessage}
         </p>
       )}
       <form
         onSubmit={formik.handleSubmit}
-        className="bg-[#1e1e1e] w-full max-w-2xl rounded-2xl shadow-lg p-8 space-y-6"
+        className="bg-gradient-to-br from-[#1a1a2e] to-[#0f0f1a] w-full max-w-2xl rounded-2xl shadow-2xl border border-purple-500/20 p-8 space-y-6 relative"
       >
-        {/* Close button */}
+        {/* Close/Back button */}
         <button
           type="button"
-          className="absolute cursor-pointer top-4 right-4 text-white font-bold text-5xl hover:text-red-600"
+          onClick={() => navigate("/recipes")}
+          className="absolute cursor-pointer top-4 right-4 text-gray-400 font-bold text-4xl hover:text-purple-400 transition-colors z-10"
+          title="Back to Recipes"
         >
           &times;
         </button>
-        <h1 className="text-3xl font-bold text-orange-500 text-center mb-6">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent text-center mb-6">
           {isEditMode ? "Edit Recipe" : "Add New Recipe"}
         </h1>
 
@@ -253,7 +255,7 @@ function RecipeForm() {
               name="recipeName"
               value={formik.values.recipeName}
               onChange={formik.handleChange}
-              className="w-full bg-[#121212] border border-[#2a2a2a] rounded-lg p-2 focus:border-orange-400 focus:outline-none"
+              className="w-full bg-[#0f0f1a] border border-purple-500/30 rounded-lg p-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-white"
             />
             {formik.errors.recipeName && (
               <p className="text-red-500 text-sm mt-1">
@@ -269,7 +271,7 @@ function RecipeForm() {
               name="timeDuration"
               value={formik.values.timeDuration}
               onChange={formik.handleChange}
-              className="w-full bg-[#121212] border border-[#2a2a2a] rounded-lg p-2 focus:border-orange-400 focus:outline-none"
+              className="w-full bg-[#0f0f1a] border border-purple-500/30 rounded-lg p-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-white"
             />
             {formik.errors.timeDuration && (
               <p className="text-red-500 text-sm mt-1">
@@ -301,7 +303,7 @@ function RecipeForm() {
                         );
                       }
                     }}
-                    className="accent-orange-500"
+                    className="accent-purple-500"
                   />
                   {type}
                 </label>
@@ -320,7 +322,7 @@ function RecipeForm() {
               name="foodPreference"
               value={formik.values.foodPreference}
               onChange={formik.handleChange}
-              className="w-full bg-[#121212] border border-[#2a2a2a] rounded-lg p-2 focus:border-orange-400 focus:outline-none"
+              className="w-full bg-[#0f0f1a] border border-purple-500/30 rounded-lg p-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-white"
             >
               <option value="">Select</option>
               <option value="Veg">Veg</option>
@@ -342,7 +344,7 @@ function RecipeForm() {
               value={formik.values.description}
               onChange={formik.handleChange}
               rows="4"
-              className="w-full bg-[#121212] border border-[#2a2a2a] rounded-lg p-2 focus:border-orange-400 focus:outline-none"
+              className="w-full bg-[#0f0f1a] border border-purple-500/30 rounded-lg p-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-white"
             ></textarea>
             {formik.errors.description && (
               <p className="text-red-500 text-sm mt-1">
@@ -358,7 +360,7 @@ function RecipeForm() {
             <label className="block text-sm mb-2">Video File</label>
             <label
               htmlFor="videoInput"
-              className="flex justify-center items-center bg-[#1a1a1a] hover:bg-orange-500  cursor-pointer hover:border border-orange-500 text-orange-500 px-4 py-2  rounded-lg hover:text-white  transition-all"
+              className="flex justify-center items-center bg-purple-600/20 hover:bg-purple-600 cursor-pointer border border-purple-500/50 hover:border-purple-500 text-purple-400 px-4 py-2 rounded-lg hover:text-white transition-all"
             >
               🎥 Choose Video
             </label>
@@ -395,7 +397,7 @@ function RecipeForm() {
             <label className="block text-sm mb-2 ">Photo URL</label>
             <label
               htmlFor="photoInput"
-              className="flex justify-center items-center bg-[#1a1a1a] hover:bg-orange-500  cursor-pointer hover:border border-orange-500 text-orange-500 px-4 py-2  rounded-lg hover:text-white  transition-all"
+              className="flex justify-center items-center bg-purple-600/20 hover:bg-purple-600 cursor-pointer border border-purple-500/50 hover:border-purple-500 text-purple-400 px-4 py-2 rounded-lg hover:text-white transition-all"
             >
               📸 Choose file
             </label>
@@ -440,7 +442,7 @@ function RecipeForm() {
           {formik.values.ingredients.map((ingredient, index) => (
             <div
               key={index}
-              className="flex flex-col md:grid md:grid-cols-[1fr_auto_auto_auto_auto] gap-4 bg-[#1c1c1c] p-3 rounded-xl mb-3 border border-[#2a2a2a]"
+              className="flex flex-col md:grid md:grid-cols-[1fr_auto_auto_auto_auto] gap-4 bg-[#0f0f1a] p-3 rounded-xl mb-3 border border-purple-500/20"
             >
               {/* Ingredient Name */}
               <input
@@ -448,7 +450,7 @@ function RecipeForm() {
                 name={`ingredients[${index}].name`}
                 value={ingredient.name}
                 onChange={formik.handleChange}
-                className="p-2 rounded bg-[#121212] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-center md:text-left w-full"
+                className="p-2 rounded bg-[#0f0f1a] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 text-center md:text-left w-full border border-purple-500/20"
                 placeholder="Ingredient Name"
               />
 
@@ -463,7 +465,7 @@ function RecipeForm() {
                         Number(ingredient.quantity) - 1
                       );
                   }}
-                  className="px-2 py-1 bg-[#2a2a2a] text-white rounded hover:bg-orange-600"
+                  className="px-2 py-1 bg-purple-600/30 text-white rounded hover:bg-purple-600 border border-purple-500/30 transition-colors"
                 >
                   -
                 </button>
@@ -478,7 +480,7 @@ function RecipeForm() {
                       Number(ingredient.quantity) + 1
                     )
                   }
-                  className="px-2 py-1 bg-[#2a2a2a] text-white rounded hover:bg-orange-600"
+                  className="px-2 py-1 bg-purple-600/30 text-white rounded hover:bg-purple-600 border border-purple-500/30 transition-colors"
                 >
                   +
                 </button>
@@ -490,7 +492,7 @@ function RecipeForm() {
                 name={`ingredients[${index}].unit`}
                 value={ingredient.unit}
                 onChange={formik.handleChange}
-                className="p-2 rounded bg-[#121212] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 text-center w-full"
+                className="p-2 rounded bg-[#0f0f1a] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 text-center w-full border border-purple-500/20"
                 placeholder="Unit (g, ml, tsp...)"
               />
 
@@ -498,7 +500,7 @@ function RecipeForm() {
               <button
                 type="button"
                 onClick={() => removeIngre(index)}
-                className="text-orange-500 hover:text-orange-400 flex items-center justify-center font-bold px-2 py-1 rounded transition-all"
+                className="text-purple-400 hover:text-purple-300 flex items-center justify-center font-bold px-2 py-1 rounded transition-all"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -521,11 +523,11 @@ function RecipeForm() {
           <button
             type="button"
             onClick={addIngredient}
-            className="hover:bg-white/70 bg-white/30 border-orange-500 border-2 text-white px-4 py-2 rounded-lg hover:text-orange-700 flex gap-2 transition-all"
+            className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 hover:from-purple-600 hover:to-pink-600 border border-purple-500/50 text-white px-4 py-2 rounded-lg flex gap-2 transition-all font-medium"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              fill="orange"
+              fill="purple"
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
@@ -549,7 +551,7 @@ function RecipeForm() {
               value={formik.values.instructions}
               onChange={formik.handleChange}
               rows="4"
-              className="w-full bg-[#121212] border border-[#2a2a2a] rounded-lg p-2 focus:border-orange-400 focus:outline-none"
+              className="w-full bg-[#0f0f1a] border border-purple-500/30 rounded-lg p-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-white"
             ></textarea>
           </div>
         </div>
@@ -557,7 +559,7 @@ function RecipeForm() {
           {/* submit button */}
           <button
             type="submit"
-            className="px-4 py-2 cursor-pointer bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-all font-semibold"
+            className="px-6 py-3 cursor-pointer bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all font-semibold shadow-lg shadow-purple-500/30"
           >
             {isEditMode ? "Update Recipe" : "Submit Recipe"}
           </button>
@@ -566,7 +568,7 @@ function RecipeForm() {
           <button
             type="button"
             onClick={() => formik.resetForm()}
-            className="bg-gray-700 px-6 py-2 rounded hover:bg-gray-600 transition"
+            className="bg-gray-700/50 px-6 py-3 rounded-lg hover:bg-gray-700 border border-gray-600 transition"
           >
             {/* Trash icon */}
             <svg

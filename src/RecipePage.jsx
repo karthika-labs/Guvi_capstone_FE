@@ -235,7 +235,7 @@ const RecipePage = () => {
     const currentRecipeTitle = recipe.recipeName || "a delicious recipe"; // Fallback title
     const shareData = {
       title: `Check out this recipe: ${currentRecipeTitle}`,
-      text: `I found this delicious recipe for ${currentRecipeTitle}!`,
+      text: `Check out this recipe: ${currentRecipeTitle}`,
       url: window.location.href,
     };
     if (navigator.share && navigator.canShare(shareData)) {
@@ -257,7 +257,9 @@ const RecipePage = () => {
 
   const copyToClipboard = () => {
     const url = window.location.href;
-    navigator.clipboard.writeText(url).then(
+    const recipeTitle = recipe.recipeName || "a delicious recipe";
+    const shareText = `Check out this recipe: ${recipeTitle}\n${url}`;
+    navigator.clipboard.writeText(shareText).then(
       () => {
         setShareMessage("Link copied to clipboard!");
         setTimeout(() => {
@@ -453,7 +455,7 @@ const RecipePage = () => {
                     `Check out this recipe: ${
                       recipe.recipeName || "a delicious recipe"
                     }`
-                  )}%0A${encodeURIComponent(window.location.href)}`}
+                  )}%20${encodeURIComponent(window.location.href)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-green-500 hover:text-green-400 transform hover:scale-110 transition-transform"
@@ -600,11 +602,22 @@ const RecipePage = () => {
                 <h3 className="text-2xl font-bold mb-4">Recipe Creator</h3>
                 <div className="flex items-center gap-4">
                   <Link to={`/profile/${recipe.userId._id}`}>
-                    <img
-                      src={recipe.userId.avatar || "https://i.pravatar.cc/50"}
-                      alt={recipe.userId.username || "User"}
-                      className="w-16 h-16 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-purple-500 transition"
-                    />
+                    {recipe.userId.avatar ? (
+                      <img
+                        src={recipe.userId.avatar}
+                        alt={recipe.userId.username || "User"}
+                        className="w-16 h-16 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-purple-500 transition"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextElementSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-16 h-16 rounded-full border-2 border-purple-500/50 bg-[#1a1a2e] flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-purple-500 transition ${recipe.userId.avatar ? 'hidden' : ''}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
                   </Link>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
@@ -713,15 +726,22 @@ const RecipePage = () => {
                         className="bg-gray-800 p-4 rounded-lg"
                       >
                         <div className="flex items-start space-x-3">
-                          {comment.userId?.avatarUrl ? (
+                          {comment.userId?.avatar || comment.userId?.avatarUrl ? (
                             <img
-                              src={comment.userId.avatarUrl}
-                              alt={comment.userId.name}
+                              src={comment.userId.avatar || comment.userId.avatarUrl}
+                              alt={comment.userId?.name || comment.userId?.username || "User"}
                               className="w-10 h-10 rounded-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextElementSibling.style.display = 'flex';
+                              }}
                             />
-                          ) : (
-                            <FaUserCircle className="w-10 h-10 text-gray-500" />
-                          )}
+                          ) : null}
+                          <div className={`w-10 h-10 rounded-full border border-purple-500/50 bg-[#1a1a2e] flex items-center justify-center ${comment.userId?.avatar || comment.userId?.avatarUrl ? 'hidden' : ''}`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center">

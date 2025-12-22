@@ -254,7 +254,7 @@
 import { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import ApiContext from "./context/ApiContext";
-import { LogOut, Share2, X } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 
 const ProfilePage = () => {
   const { userId } = useParams();
@@ -489,15 +489,22 @@ const ProfilePage = () => {
               <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500 via-pink-500 to-purple-500 blur-xl opacity-70 animate-pulse" />
               <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 blur-md opacity-60" />
 
-              <img
-                src={
-                  isEditing && editData.avatarPreview
-                    ? editData.avatarPreview
-                    : displayUser.avatar || "/default-avatar.png"
-                }
-                alt="avatar"
-                className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-[#0f0f1a] shadow-2xl transition-transform duration-300 group-hover:scale-105"
-              />
+              {(isEditing && editData.avatarPreview) || displayUser.avatar ? (
+                <img
+                  src={isEditing && editData.avatarPreview ? editData.avatarPreview : displayUser.avatar}
+                  alt="avatar"
+                  className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-[#0f0f1a] shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div className={`relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#0f0f1a] shadow-2xl transition-transform duration-300 group-hover:scale-105 bg-[#1a1a2e] flex items-center justify-center ${(isEditing && editData.avatarPreview) || displayUser.avatar ? 'hidden' : ''}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-20 h-20 sm:w-24 sm:h-24 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
 
               {isEditing && (
                 <label className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer text-sm">
@@ -586,21 +593,25 @@ const ProfilePage = () => {
                 )}
 
                 {isOwnProfile && (
-                  <>
-                    <button className="p-2.5 rounded-full hover:bg-purple-500/20 transition-all duration-200 hover:scale-110">
-                      <Share2 size={20} className="text-purple-400" />
-                    </button>
-
+                  <div className="relative group">
                     <button
                       onClick={() => {
                         localStorage.removeItem("token");
                         window.location.href = "/login";
                       }}
                       className="p-2.5 rounded-full hover:bg-red-500/20 transition-all duration-200 hover:scale-110"
+                      title="Logout"
                     >
                       <LogOut size={20} className="text-red-400" />
                     </button>
-                  </>
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                      Logout
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                        <div className="border-4 border-transparent border-t-gray-800"></div>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -790,11 +801,22 @@ const ProfilePage = () => {
                     onClick={() => setShowFollowersModal(false)}
                     className="flex items-center gap-3 p-3 hover:bg-[#0f0f1a] rounded-lg transition"
                   >
-                    <img
-                      src={follower.avatar || "https://i.pravatar.cc/50"}
-                      alt={follower.username}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
+                    {follower.avatar ? (
+                      <img
+                        src={follower.avatar}
+                        alt={follower.username}
+                        className="w-12 h-12 rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextElementSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-12 h-12 rounded-full border border-purple-500/50 bg-[#1a1a2e] flex items-center justify-center ${follower.avatar ? 'hidden' : ''}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
                     <div>
                       <p className="text-white font-medium">{follower.username}</p>
                       {follower.name && (
@@ -835,11 +857,22 @@ const ProfilePage = () => {
                     onClick={() => setShowFollowingModal(false)}
                     className="flex items-center gap-3 p-3 hover:bg-[#0f0f1a] rounded-lg transition"
                   >
-                    <img
-                      src={following.avatar || "https://i.pravatar.cc/50"}
-                      alt={following.username}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
+                    {following.avatar ? (
+                      <img
+                        src={following.avatar}
+                        alt={following.username}
+                        className="w-12 h-12 rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextElementSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-12 h-12 rounded-full border border-purple-500/50 bg-[#1a1a2e] flex items-center justify-center ${following.avatar ? 'hidden' : ''}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
                     <div>
                       <p className="text-white font-medium">{following.username}</p>
                       {following.name && (

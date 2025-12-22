@@ -27,12 +27,17 @@ const formatDate = (iso) =>
       })
     : "";
 
-const getRatingColor = (rating) =>
-  rating >= 4
-    ? "text-green-400"
-    : rating >= 3
-    ? "text-yellow-400"
-    : "text-red-500";
+const getRatingColor = (rating) => {
+  const numRating = parseFloat(rating) || 0;
+  if (numRating < 2) {
+    return "text-red-500"; // Below 3: Red
+  } else if (numRating >= 3 || numRating < 4) {
+    return "text-yellow-400"; // Equal to or above 3 and below 4: Yellow
+  } else if (numRating >= 4 || numRating <= 5) {
+    return "text-green-400"; // Equal to or above 4 and below/equal to 5: Green
+  }
+  return "text-gray-400"; // Default fallback
+};
 
 const getFoodColor = (pref) =>
   !pref
@@ -100,9 +105,9 @@ export default function Card({ recipe }) {
  const handleNativeShare = useCallback(async () => {
   try {
     await navigator.share({
-      title: recipe.recipeName,
-      text: "Check out this recipe",
-      url: recipeUrl, //  THIS makes it clickable everywhere
+      title: `Check out this recipe: ${recipe.recipeName}`,
+      text: `Check out this recipe: ${recipe.recipeName}`,
+      url: recipeUrl, // This makes it clickable everywhere
     });
   } catch (err) {
     if (err.name !== "AbortError") {
@@ -113,7 +118,8 @@ export default function Card({ recipe }) {
 
 
 const copyToClipboard = () => {
-  navigator.clipboard.writeText(recipeUrl).then(() => {
+  const shareText = `Check out this recipe: ${recipe.recipeName}\n${recipeUrl}`;
+  navigator.clipboard.writeText(shareText).then(() => {
     setShareMessage("Link copied to clipboard!");
     setTimeout(() => {
       setShareMessage("");
@@ -173,10 +179,22 @@ const copyToClipboard = () => {
         <div className="flex gap-2 items-start mb-2">
           <div className="flex items-center gap-2 flex-1 min-w-0 pr-2">
             <Link to={`/profile/${recipe.userId?._id}`} className="flex-shrink-0">
-              <img
-                src={recipe.userId?.avatar || "https://i.pravatar.cc/50"}
-                className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-purple-500 transition"
-              />
+              {recipe.userId?.avatar ? (
+                <img
+                  src={recipe.userId.avatar}
+                  alt={recipe.userId?.username || "User"}
+                  className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-purple-500 transition"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div className={`w-8 h-8 rounded-full border border-purple-500/50 bg-[#1a1a2e] flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-purple-500 transition ${recipe.userId?.avatar ? 'hidden' : ''}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
             </Link>
             <div className="text-gray-300 text-xs flex-1 min-w-0">
               <Link to={`/profile/${recipe.userId?._id}`} className="hover:text-purple-400 transition block">
@@ -277,7 +295,7 @@ const copyToClipboard = () => {
         <div className="flex justify-between items-center mt-auto pt-2">
           <span
             className={`flex items-center text-xs font-semibold ${getRatingColor(
-              recipe.averageRating
+              recipe.averageRating ?? 0
             )}`}
           >
             <svg
@@ -294,7 +312,7 @@ const copyToClipboard = () => {
                 d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"
               />
             </svg>
-            {recipe.averageRating?.toFixed(1) || "0.0"}
+            {(recipe.averageRating ?? 0).toFixed(1)}
           </span>
 
           <button
@@ -321,8 +339,8 @@ const copyToClipboard = () => {
             <div className="flex justify-center gap-5 mb-6 text-4xl">
               <a
                 href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                  `Check out this recipe: ${recipe.recipeName}\n${recipeUrl}`
-                )}`}
+                  `Check out this recipe: ${recipe.recipeName}`
+                )}%20${encodeURIComponent(recipeUrl)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-green-500 hover:scale-110 transition"
@@ -331,8 +349,8 @@ const copyToClipboard = () => {
               </a>
 
               <a
-                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                  `Check out this recipe: ${recipe.recipeName}\n${recipeUrl}`
+                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(recipeUrl)}&text=${encodeURIComponent(
+                  `Check out this recipe: ${recipe.recipeName}`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -342,9 +360,7 @@ const copyToClipboard = () => {
               </a>
 
               <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                  `Check out this recipe: ${recipe.recipeName}\n${recipeUrl}`
-                )}`}
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(recipeUrl)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:scale-110 transition"
