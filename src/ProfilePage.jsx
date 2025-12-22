@@ -478,8 +478,8 @@ const ProfilePage = () => {
         </button>
 
         {/* HEADER */}
-        <div className="flex flex-col gap-8">
-          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+        <div className="flex flex-col gap-10 md:gap-12">
+          <h2 className="text-4xl   md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent break-words mb-2 pr-4 pb-2">
             {displayUser.username}
           </h2>
 
@@ -493,15 +493,15 @@ const ProfilePage = () => {
                 <img
                   src={isEditing && editData.avatarPreview ? editData.avatarPreview : displayUser.avatar}
                   alt="avatar"
-                  className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-[#0f0f1a] shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                  className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-[#0f0f1a] shadow-1xl transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => {
                     e.target.style.display = 'none';
                     e.target.nextElementSibling.style.display = 'flex';
                   }}
                 />
               ) : null}
-              <div className={`relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#0f0f1a] shadow-2xl transition-transform duration-300 group-hover:scale-105 bg-[#1a1a2e] flex items-center justify-center ${(isEditing && editData.avatarPreview) || displayUser.avatar ? 'hidden' : ''}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-20 h-20 sm:w-24 sm:h-24 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <div className={`relative w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-[#0f0f1a] shadow-2xl transition-transform duration-300 group-hover:scale-105 bg-[#1a1a2e] flex items-center justify-center ${(isEditing && editData.avatarPreview) || displayUser.avatar ? 'hidden' : ''}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-14 h-14 sm:w-16 sm:h-16 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>

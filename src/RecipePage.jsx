@@ -391,7 +391,7 @@ const RecipePage = () => {
         <div className="absolute top-4 left-4 z-20">
           <Link
             to="/recipes"
-            className="flex items-center px-4 py-2 bg-gray-800 bg-opacity-75 rounded-full text-white hover:bg-gray-700 transition duration-300"
+            className="flex items-center px-4 py-2 bg-gray-800 bg-opacity-75 rounded-full text-white hover:bg-gray-700 hover:text-purple-400 transition duration-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -432,7 +432,7 @@ const RecipePage = () => {
           )}
           <button
             onClick={handleShare}
-            className="flex items-center px-4 py-2 bg-gray-800 bg-opacity-75 rounded-full text-white hover:bg-gray-700 transition duration-300"
+            className="flex items-center px-4 py-2 bg-gray-800 bg-opacity-75 rounded-full text-white hover:bg-gray-700 hover:text-purple-400 transition duration-300"
           >
             <FaShareAlt className="mr-2" />
             Share
@@ -847,7 +847,7 @@ const RecipePage = () => {
           onClick={() => setShowGalleryModal(false)} // Close on overlay click
         >
           <div
-            className="relative max-w-screen-lg max-h-screen-lg p-4"
+            className="relative w-full h-full flex items-center justify-center p-4"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
@@ -861,7 +861,7 @@ const RecipePage = () => {
             <img
               src={images[modalImageIndex]}
               alt={`${recipe.recipeName} - Full Screen`}
-              className="max-w-full max-h-full object-contain"
+              className="max-w-[95vw] max-h-[95vh] w-auto h-auto object-contain"
             />
             {/* Navigation Buttons (if more than one image) */}
             {images.length > 1 && (

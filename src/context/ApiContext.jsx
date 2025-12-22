@@ -240,23 +240,21 @@ const updateProfile = async (data) => {
 
       const newPlan = res.data; // backend returns the plan directly
 
+      // Only update state if creation was successful
       setWeekPlans((prev) => [newPlan, ...prev]);
       console.log("API response for createWeekPlan:", res.data);
       return newPlan;
     } catch (err) {
       const msg = err?.response?.data?.message;
 
-      if (msg === "A plan already exists for this week") {
-        const existing = err.response.data.plan;
-
-        // Show error toast
-        toast.error("A plan already exists for this week");
-
-        // Return existing plan so frontend can redirect
-        return existing;
+      // Don't update state if there's an error - let the frontend handle it
+      if (msg === "A plan already exists for this week" || msg === "This date already exists in another week plan") {
+        // Don't add to state, just throw the error with existing plan info
+        throw err;
       }
 
       console.error("Error creating week plan:", err);
+      console.error("Error details:", err.response?.data);
       throw err;
     }
   };

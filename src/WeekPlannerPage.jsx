@@ -5,6 +5,9 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
+
+const API_BASE_URL = "http://localhost:5001";
 
 export default function WeekPlannerPage() {
   const navigate = useNavigate();
@@ -46,14 +49,15 @@ export default function WeekPlannerPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMealCell, setSelectedMealCell] = useState(null);
+  const [showOverlapModal, setShowOverlapModal] = useState(false);
+  const [overlappingPlan, setOverlappingPlan] = useState(null);
 
-  // useEffect(() => {
-  //   const loadWeeks = async () => {
-  //     const weeks = await fetchWeekPlans();
-  //     setExistingWeeks(weeks);
-  //   };
-  //   loadWeeks();
-  // }, []);
+  // Load week plans for overlap checking
+  useEffect(() => {
+    if (!isEdit) {
+      fetchWeekPlans();
+    }
+  }, [isEdit]);
 
   // -----------------------------------------
   //  LOAD EXISTING WEEK IF EDITING
@@ -153,9 +157,23 @@ export default function WeekPlannerPage() {
     if (id) return; // ignore if editing
     if (!selectedDate) return toast.error("Select a start date");
 
+    // Ensure we have the latest week plans before checking
+    await fetchWeekPlans();
+    
+    // Wait a bit for state to update (or use the returned data)
+    const plansResponse = await axios.get(`${API_BASE_URL}/plans`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    const currentWeekPlans = plansResponse.data.getPlan || [];
+    
+    console.log("Checking for overlaps with weekPlans:", currentWeekPlans);
+    console.log("Selected date:", selectedDate);
+
     // Normalize date to avoid timezone issues - extract year, month, day
     const selected = new Date(selectedDate);
     const normalizedStartDate = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+    
+    console.log("Normalized start date:", normalizedStartDate);
 
     const newWeekDates = Array.from({ length: 7 }).map((_, i) => {
       const d = new Date(normalizedStartDate);
@@ -167,47 +185,102 @@ export default function WeekPlannerPage() {
       return `${year}-${month}-${day}`;
     });
 
-    // Check overlap with existing weeks and find specific overlapping dates
+    // Check overlap with existing weeks
     let overlappingWeek = null;
-    let overlappingDates = [];
 
-    for (const week of weekPlans) {
-      // Normalize date to avoid timezone issues
-      const weekStartDateStr = week.weekStartDate;
-      const [year, month, day] = weekStartDateStr.split('-').map(Number);
-      const weekStart = new Date(year, month - 1, day); // month is 0-indexed
-      
-      const weekDates = Array.from({ length: 7 }).map((_, i) => {
-        const d = new Date(weekStart);
-        d.setDate(d.getDate() + i);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      });
-      
-      const overlapping = newWeekDates.filter((date) => weekDates.includes(date));
-      if (overlapping.length > 0) {
-        overlappingWeek = week;
-        overlappingDates = overlapping;
-        break; // Found first overlapping week
+    // Calculate the new week's date range
+    const newWeekStart = new Date(normalizedStartDate);
+    const newWeekEnd = new Date(newWeekStart);
+    newWeekEnd.setDate(newWeekEnd.getDate() + 6);
+    
+    console.log("New week date range:", {
+      start: newWeekStart.toISOString().split('T')[0],
+      end: newWeekEnd.toISOString().split('T')[0]
+    });
+
+    if (currentWeekPlans && Array.isArray(currentWeekPlans) && currentWeekPlans.length > 0) {
+      console.log(`Checking ${currentWeekPlans.length} existing week plans for overlaps...`);
+
+      for (const week of currentWeekPlans) {
+        if (!week || !week.weekStartDate) {
+          console.log("Skipping week - missing data:", week);
+          continue;
+        }
+
+        try {
+          // Parse existing week start date
+          const weekStartDateStr = String(week.weekStartDate).trim();
+          const dateParts = weekStartDateStr.split('-');
+          
+          if (dateParts.length !== 3) {
+            console.log("Skipping week - invalid date format:", weekStartDateStr);
+            continue;
+          }
+
+          const [existingYear, existingMonth, existingDay] = dateParts.map(Number);
+          
+          // Validate date values
+          if (isNaN(existingYear) || isNaN(existingMonth) || isNaN(existingDay)) {
+            console.log("Skipping week - invalid date values:", { existingYear, existingMonth, existingDay });
+            continue;
+          }
+
+          const existingWeekStart = new Date(existingYear, existingMonth - 1, existingDay);
+          
+          // Validate the date object
+          if (isNaN(existingWeekStart.getTime())) {
+            console.log("Skipping week - invalid date object:", existingWeekStart);
+            continue;
+          }
+
+          const existingWeekEnd = new Date(existingWeekStart);
+          existingWeekEnd.setDate(existingWeekEnd.getDate() + 6);
+          
+          console.log("Comparing with existing week:", {
+            id: week._id,
+            start: existingWeekStart.toISOString().split('T')[0],
+            end: existingWeekEnd.toISOString().split('T')[0]
+          });
+
+          // Check if dates overlap using date range comparison
+          const overlapCondition1 = newWeekStart >= existingWeekStart && newWeekStart <= existingWeekEnd;
+          const overlapCondition2 = newWeekEnd >= existingWeekStart && newWeekEnd <= existingWeekEnd;
+          const overlapCondition3 = newWeekStart <= existingWeekStart && newWeekEnd >= existingWeekEnd;
+          
+          console.log("Overlap conditions:", {
+            condition1: overlapCondition1,
+            condition2: overlapCondition2,
+            condition3: overlapCondition3
+          });
+
+          if (overlapCondition1 || overlapCondition2 || overlapCondition3) {
+            console.log("OVERLAP DETECTED!");
+            overlappingWeek = {
+              _id: week._id,
+              weekStartDate: week.weekStartDate,
+              startDate: existingWeekStart,
+              endDate: existingWeekEnd
+            };
+            break; // Found first overlapping week
+          }
+        } catch (parseErr) {
+          // Skip this week if there's an error parsing its date
+          console.warn("Error parsing existing week date:", week.weekStartDate, parseErr);
+          continue;
+        }
       }
+    } else {
+      console.log("No existing week plans to check against");
     }
 
-    if (overlappingWeek && overlappingDates.length > 0) {
-      // Format the existing week's date range (start and end only) - normalize to avoid timezone issues
-      const existingWeekStartDateStr = overlappingWeek.weekStartDate;
-      const [year, month, day] = existingWeekStartDateStr.split('-').map(Number);
-      const existingWeekStart = new Date(year, month - 1, day); // month is 0-indexed
-      const existingWeekEnd = new Date(existingWeekStart);
-      existingWeekEnd.setDate(existingWeekEnd.getDate() + 6); // +6 gives 7 days total
-      const existingWeekStartFormatted = existingWeekStart.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-      const existingWeekEndFormatted = existingWeekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-      
-      return toast.error(
-        `The dates in this week already exist in the ${existingWeekStartFormatted} - ${existingWeekEndFormatted} plan`
-      );
+    if (overlappingWeek) {
+      console.log("Overlap found! Showing modal with plan:", overlappingWeek);
+      setOverlappingPlan(overlappingWeek);
+      setShowOverlapModal(true);
+      return;
     }
+
+    console.log("No overlap found, proceeding to create week plan");
 
     // Create new week
     try {
@@ -241,10 +314,44 @@ export default function WeekPlannerPage() {
       toast.success("Week created successfully");
     } catch (err) {
       console.error("Error creating week:", err);
-      toast.error(
-        err.response?.data?.message ||
-          "Cannot create week: maybe a week already exists for this date"
-      );
+      if (err.response?.data?.existingPlan) {
+        // Backend detected overlap - format the dates properly
+        const existingPlan = err.response.data.existingPlan;
+        const [startYear, startMonth, startDay] = existingPlan.startDate.split('-').map(Number);
+        const [endYear, endMonth, endDay] = existingPlan.endDate.split('-').map(Number);
+        
+        setOverlappingPlan({
+          _id: existingPlan._id,
+          weekStartDate: existingPlan.weekStartDate,
+          startDate: new Date(startYear, startMonth - 1, startDay),
+          endDate: new Date(endYear, endMonth - 1, endDay)
+        });
+        setShowOverlapModal(true);
+      } else if (err.response?.data?.message && err.response.data.message.includes("already exists")) {
+        // Try to extract existing plan info from error
+        toast.error(err.response.data.message);
+        // Still try to show modal if we can get the plan info
+        if (err.response.data.plan) {
+          const plan = err.response.data.plan;
+          const [year, month, day] = plan.weekStartDate.split('-').map(Number);
+          const existingWeekStart = new Date(year, month - 1, day);
+          const existingWeekEnd = new Date(existingWeekStart);
+          existingWeekEnd.setDate(existingWeekEnd.getDate() + 6);
+          
+          setOverlappingPlan({
+            _id: plan._id,
+            weekStartDate: plan.weekStartDate,
+            startDate: existingWeekStart,
+            endDate: existingWeekEnd
+          });
+          setShowOverlapModal(true);
+        }
+      } else {
+        toast.error(
+          err.response?.data?.message ||
+            "Cannot create week: maybe a week already exists for this date"
+        );
+      }
     }
   };
 
@@ -626,6 +733,78 @@ export default function WeekPlannerPage() {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Overlap Modal */}
+      {showOverlapModal && overlappingPlan && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => {
+          setShowOverlapModal(false);
+          setOverlappingPlan(null);
+        }}>
+          <div className="bg-[#1a1a2e] p-6 rounded-2xl border border-purple-900/40 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-white">Date Already Exists</h2>
+              <button
+                onClick={() => {
+                  setShowOverlapModal(false);
+                  setOverlappingPlan(null);
+                }}
+                className="text-gray-400 hover:text-white transition"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="mb-6">
+              <p className="text-gray-300 mb-4 text-center">
+                This date is already included in existing plans{" "}
+                <span className="text-purple-400 font-semibold">
+                  {overlappingPlan.startDate instanceof Date 
+                    ? overlappingPlan.startDate.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })
+                    : new Date(overlappingPlan.startDate).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                  {" - "}
+                  {overlappingPlan.endDate instanceof Date
+                    ? overlappingPlan.endDate.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })
+                    : new Date(overlappingPlan.endDate).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                </span>
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowOverlapModal(false);
+                  setOverlappingPlan(null);
+                }}
+                className="flex-1 px-4 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-medium transition"
+              >
+                Close
+              </button>
+              <Link
+                to={`/planner/${overlappingPlan._id}`}
+                onClick={() => {
+                  setShowOverlapModal(false);
+                  setOverlappingPlan(null);
+                }}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg text-white font-medium transition"
+              >
+                Open Existing Plan
+              </Link>
             </div>
           </div>
         </div>

@@ -8,6 +8,8 @@ function RecipeForm() {
   const isEditMode = !!recipeId;
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [existingPhotos, setExistingPhotos] = useState([]);
+  const [existingVideo, setExistingVideo] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [toast, setToast] = useState(false);
   const navigate = useNavigate();
@@ -26,20 +28,13 @@ function RecipeForm() {
           const recipe = res.data.recipe;
           setInitialRecipe(recipe);
           
-          // Set form values
-          formik.setValues({
-            recipeName: recipe.recipeName || "",
-            videoUrl: recipe.videoUrl || "",
-            photoUrl: recipe.photoUrl || [],
-            timeDuration: recipe.timeDuration || "",
-            mealType: recipe.mealType || [],
-            foodPreference: recipe.foodPreference || "",
-            ingredients: recipe.ingredients && recipe.ingredients.length > 0 
-              ? recipe.ingredients 
-              : [{ name: "", quantity: "", unit: "" }],
-            instructions: recipe.instructions || "",
-            description: recipe.description || "",
-          });
+          // Set existing photos and video
+          if (recipe.photoUrl && Array.isArray(recipe.photoUrl) && recipe.photoUrl.length > 0) {
+            setExistingPhotos(recipe.photoUrl);
+          }
+          if (recipe.videoUrl) {
+            setExistingVideo(recipe.videoUrl);
+          }
         } catch (err) {
           console.error("Error fetching recipe:", err);
           setErrorMessage("Failed to load recipe for editing");
@@ -127,9 +122,10 @@ function RecipeForm() {
         videoUrl = vres.data.secure_url;
       }
 
-      //  push to formik values
-      values.photoUrl = uploadedUrls.length > 0 ? uploadedUrls : (initialRecipe?.photoUrl || []);
-      values.videoUrl = videoUrl || (initialRecipe?.videoUrl || "");
+      // Combine existing and new photos/videos
+      const allPhotoUrls = [...existingPhotos, ...uploadedUrls];
+      values.photoUrl = allPhotoUrls.length > 0 ? allPhotoUrls : [];
+      values.videoUrl = videoUrl || existingVideo || "";
 
       try {
         if (isEditMode) {
@@ -201,13 +197,25 @@ function RecipeForm() {
   };
 
   //remove photo
-  const removePhoto = (index) => {
-    const photoUrls = [...selectedPhotos];
-    photoUrls.splice(index, 1);
-    setSelectedPhotos(photoUrls);
+  const removePhoto = (index, isExisting = false) => {
+    if (isExisting) {
+      const photos = [...existingPhotos];
+      photos.splice(index, 1);
+      setExistingPhotos(photos);
+    } else {
+      const photoUrls = [...selectedPhotos];
+      photoUrls.splice(index, 1);
+      setSelectedPhotos(photoUrls);
+    }
   };
 
-  const removeVideo = () => setSelectedVideo(null);
+  const removeVideo = (isExisting = false) => {
+    if (isExisting) {
+      setExistingVideo(null);
+    } else {
+      setSelectedVideo(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#0f0f1a] text-gray-200 flex justify-center items-center p-8">
@@ -372,25 +380,49 @@ function RecipeForm() {
               className="hidden" // hide the ugly native input
               id="videoInput"
             />
-            {/* Show selected video name */}
-            {
-              <div className="mt-2 text-sm space-y-1">
-                {selectedVideo ? (
-                  <div className="flex justify-between items-center bg-[#1a1a1a] p-2 rounded-md">
-                    <span>{selectedVideo.name}</span>
-                    <button
-                      type="button"
-                      onClick={removeVideo}
-                      className="text-red-500 hover:text-red-400 font-bold"
+            {/* Show existing and selected video */}
+            <div className="mt-2 text-sm space-y-1">
+              {existingVideo && (
+                <div className="flex justify-between items-center bg-[#1a1a1a] p-2 rounded-md">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-400">Existing:</span>
+                    <a 
+                      href={existingVideo} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:underline truncate max-w-xs"
                     >
-                      ✕
-                    </button>
+                      {existingVideo.split('/').pop() || 'Video'}
+                    </a>
                   </div>
-                ) : (
-                  <p>No video selected</p>
-                )}
-              </div>
-            }
+                  <button
+                    type="button"
+                    onClick={() => removeVideo(true)}
+                    className="text-red-500 hover:text-red-400 font-bold ml-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+              {selectedVideo && (
+                <div className="flex justify-between items-center bg-[#1a1a1a] p-2 rounded-md">
+                  <div className="flex items-center gap-2">
+                    <span className="text-purple-400">New:</span>
+                    <span>{selectedVideo.name}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeVideo(false)}
+                    className="text-red-500 hover:text-red-400 font-bold ml-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+              {!existingVideo && !selectedVideo && (
+                <p>No video selected</p>
+              )}
+            </div>
           </div>
 
           <div className="">
@@ -411,25 +443,57 @@ function RecipeForm() {
               id="photoInput"
             />
 
-            {/* Show selected photo names */}
+            {/* Show existing and selected photos */}
             <div className="mt-2 space-y-2 text-sm">
-              {selectedPhotos.length > 0 ? (
-                selectedPhotos.map((file, index) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center bg-[#1a1a1a] p-2 rounded-md"
-                  >
-                    <span className="truncate">{file.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(index)}
-                      className="text-red-500 hover:text-red-400 font-bold"
+              {existingPhotos.length > 0 && existingPhotos.map((photoUrl, index) => (
+                <div
+                  key={`existing-${index}`}
+                  className="flex justify-between items-center bg-[#1a1a1a] p-2 rounded-md"
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className="text-green-400">Existing:</span>
+                    <img 
+                      src={photoUrl} 
+                      alt={`Existing ${index + 1}`}
+                      className="w-10 h-10 object-cover rounded"
+                    />
+                    <a 
+                      href={photoUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:underline truncate"
                     >
-                      ✕
-                    </button>
+                      Photo {index + 1}
+                    </a>
                   </div>
-                ))
-              ) : (
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(index, true)}
+                    className="text-red-500 hover:text-red-400 font-bold ml-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {selectedPhotos.length > 0 && selectedPhotos.map((file, index) => (
+                <div
+                  key={`new-${index}`}
+                  className="flex justify-between items-center bg-[#1a1a1a] p-2 rounded-md"
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className="text-purple-400">New:</span>
+                    <span className="truncate">{file.name}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(index, false)}
+                    className="text-red-500 hover:text-red-400 font-bold ml-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {existingPhotos.length === 0 && selectedPhotos.length === 0 && (
                 <p>No photos selected</p>
               )}
             </div>

@@ -2,54 +2,44 @@ import { useEffect, useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import ApiContext from "./context/ApiContext";
 import { useNavigate } from "react-router-dom";
+import ConfirmModal from "./ConfirmModal";
 
 export default function WeekPlansDashboard() {
   const { weekPlans, fetchWeekPlans, createWeekPlan, deleteWeek } =
     useContext(ApiContext);
 
   const navigate = useNavigate();
-  const [creating, setCreating] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [weekToDelete, setWeekToDelete] = useState(null);
 
   useEffect(() => {
     fetchWeekPlans();
   }, []);
 
-  const handleCreateWeek = async () => {
-    if (creating) return;
-    setCreating(true);
-
-try {
-    const monday = getUpcomingMonday();
-    const newWeek = await createWeekPlan({ weekStartDate: monday });
-    if (!newWeek) return;
-      navigate(`/planner/new`);
-
-  } catch (err) {
-    console.log("Error creating week:", err);
-  } finally {
-    setCreating(false);
-  }
+  const handleCreateWeek = () => {
+    // Simply navigate to the create page where user can select a date from calendar
+    navigate(`/planner/new`);
   };
 
-  const getUpcomingMonday = () => {
-    const today = new Date();
-    const day = today.getDay();
-    const diff = (1 + 7 - day) % 7;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + diff);
-    return monday.toISOString().split("T")[0];
+  const handleDeleteClick = (weekId) => {
+    setWeekToDelete(weekId);
+    setShowDeleteModal(true);
   };
-  const handleDeleteWeek = async (weekId) => {
-  const confirmDelete = window.confirm("Are you sure you want to delete this week?");
-  if (!confirmDelete) return;
 
-  try {
-    await deleteWeek(weekId);
-    await fetchWeekPlans(); // refresh dashboard after deletion
-  } catch (err) {
-    console.error("Error deleting week:", err);
-  }
-};
+  const handleDeleteWeek = async () => {
+    if (!weekToDelete) return;
+
+    try {
+      await deleteWeek(weekToDelete);
+      await fetchWeekPlans(); // refresh dashboard after deletion
+      setShowDeleteModal(false);
+      setWeekToDelete(null);
+    } catch (err) {
+      console.error("Error deleting week:", err);
+      setShowDeleteModal(false);
+      setWeekToDelete(null);
+    }
+  };
 
 
   return (
@@ -86,22 +76,12 @@ try {
             </div>
             <button
               onClick={handleCreateWeek}
-              disabled={creating}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg text-white font-semibold transition-all duration-200 shadow-lg hover:shadow-purple-500/50 disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg text-white font-semibold transition-all duration-200 shadow-lg hover:shadow-purple-500/50"
             >
-              {creating ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Create New Week
-                </>
-              )}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create New Week
             </button>
           </div>
         </div>
@@ -229,7 +209,7 @@ try {
                   </Link>
 
                   <button
-                    onClick={() => handleDeleteWeek(week._id)}
+                    onClick={() => handleDeleteClick(week._id)}
                     className="px-4 py-2.5 bg-red-600/20 hover:bg-red-600/30 border border-red-600/50 hover:border-red-600 rounded-lg text-red-400 hover:text-red-300 transition-all duration-200"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,6 +226,21 @@ try {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setWeekToDelete(null);
+        }}
+        onConfirm={handleDeleteWeek}
+        title="Delete Week Plan"
+        message="Are you sure you want to delete this week? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmColor="bg-red-600 hover:bg-red-700"
+      />
     </div>
   );
 }

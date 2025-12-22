@@ -131,20 +131,21 @@ const handleSearch = async () => {
                 Recipe<span className="text-[#A100FF]">&lt;</span>Hub
               </span>
             </Link>
-            <div className="flex items-center justify-center gap-3 md:gap-4">
+            <div className="flex items-center justify-center gap-2 md:gap-4">
               <Link
-                to="/recipes/new"
-                className="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-[#A100FF] to-purple-600 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 cursor-pointer"
+                to={user ? "/recipes/new" : "/login"}
+                className="flex items-center gap-1 md:gap-2 bg-gradient-to-r from-[#A100FF] to-purple-600 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-2 md:py-2.5 px-2 md:px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 cursor-pointer"
+                title={user ? "Add Recipe" : "Login to add recipes"}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-                <span>Add Recipe</span>
+                <span className="hidden md:inline">Add Recipe</span>
               </Link>
               {/* Week Plans - Always visible, redirects to login if not authenticated */}
               <Link
                 to={user ? "/weekplans" : "/login"}
-                className="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 whitespace-nowrap cursor-pointer"
+                className="flex items-center gap-1 md:gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 md:py-2.5 px-2 md:px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 whitespace-nowrap cursor-pointer"
                 title={user ? "View Week Plans" : "Login to access Week Plans"}
               >
                 <svg
@@ -161,21 +162,29 @@ const handleSearch = async () => {
                     d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
                   />
                 </svg>
-                <span>Week Plans</span>
+                <span className="hidden md:inline">Week Plans</span>
               </Link>
               {!user && (
                 <>
               <Link
                 to="/login"
-                    className="hidden md:inline-block bg-gradient-to-r from-[#A100FF] to-purple-600 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 cursor-pointer"
+                    className="flex items-center gap-1 md:gap-2 bg-gradient-to-r from-[#A100FF] to-purple-600 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-2 md:py-2.5 px-2 md:px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 cursor-pointer"
+                title="Login"
               >
-                Login
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                </svg>
+                <span className="hidden md:inline">Login</span>
               </Link>
               <Link
                 to="/register"
-                    className="hidden md:inline-block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2.5 px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 cursor-pointer"
+                    className="flex items-center gap-1 md:gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 md:py-2.5 px-2 md:px-5 rounded-lg shadow-lg hover:shadow-purple-500/50 transition-all ease-in-out duration-300 hover:scale-105 cursor-pointer"
+                title="Register"
               >
-                Register
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                </svg>
+                <span className="hidden md:inline">Register</span>
               </Link>
                 </>
               )}
