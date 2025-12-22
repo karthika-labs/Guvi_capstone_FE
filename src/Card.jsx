@@ -7,6 +7,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import axios from "axios";
 import ApiContext from "./context/ApiContext";
+import API_BASE_URL from "./config/api";
 import FollowButton from "./FollowButton";
 import {
   FaShareAlt,
@@ -70,12 +71,12 @@ export default function Card({ recipe }) {
       setShowHeart(!alreadyLiked ? recipe._id : null);
 
       if (alreadyLiked) {
-        await axios.delete(`http://localhost:5001/recipes/${recipe._id}/like`, {
+        await axios.delete(`${API_BASE_URL}/recipes/${recipe._id}/like`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
       } else {
         await axios.post(
-          `http://localhost:5001/recipes/${recipe._id}/like`,
+          `${API_BASE_URL}/recipes/${recipe._id}/like`,
           {},
           {
             headers: {

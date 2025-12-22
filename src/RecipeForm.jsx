@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
+import API_BASE_URL from "./config/api";
 
 function RecipeForm() {
   const { recipeId } = useParams();
@@ -22,7 +23,7 @@ function RecipeForm() {
       const fetchRecipe = async () => {
         try {
           const token = localStorage.getItem("token");
-          const res = await axios.get(`http://localhost:5001/recipes/${recipeId}`, {
+          const res = await axios.get(`${API_BASE_URL}/recipes/${recipeId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const recipe = res.data.recipe;
@@ -130,7 +131,7 @@ function RecipeForm() {
       try {
         if (isEditMode) {
           // Update existing recipe
-          const res = await axios.put(`http://localhost:5001/recipes/${recipeId}`, values, {
+          const res = await axios.put(`${API_BASE_URL}/recipes/${recipeId}`, values, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
@@ -142,7 +143,7 @@ function RecipeForm() {
           }, 1500);
         } else {
           // Create new recipe
-          const res = await axios.post("http://localhost:5001/recipes", values, {
+          const res = await axios.post(`${API_BASE_URL}/recipes`, values, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },

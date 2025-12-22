@@ -58,7 +58,7 @@
 //       console.log("ALREADY LIKED:", alreadyLiked);
 //       if (alreadyLiked) {
 //         // Remove like
-//         await axios.delete(`http://localhost:5001/recipes/${recipe._id}/like`, {
+//         await axios.delete(`${API_BASE_URL}/recipes/${recipe._id}/like`, {
 //           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
 //         });
 //         console.log("Recipe unliked:", recipe._id);
@@ -66,7 +66,7 @@
 //         setShowHeart(recipe._id);
 //         // Add like
 //         await axios.post(
-//           `http://localhost:5001/recipes/${recipe._id}/like`,
+//           `${API_BASE_URL}/recipes/${recipe._id}/like`,
 //           {},
 //           {
 //             headers: {

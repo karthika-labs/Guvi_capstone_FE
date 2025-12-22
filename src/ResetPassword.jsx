@@ -3,6 +3,7 @@ import { useFormik } from "formik";
 import axios from "axios";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import API_BASE_URL from "./config/api";
 
 function ResetPassword() {
   const { token } = useParams();
@@ -35,7 +36,7 @@ function ResetPassword() {
       setLoading(true);
       try {
         const res = await axios.post(
-          `http://localhost:5001/users/resetPasswords/${token}`,
+          `${API_BASE_URL}/users/resetPasswords/${token}`,
           { password: values.password }
         );
         toast.success(res.data.message || "Password reset successfully!");

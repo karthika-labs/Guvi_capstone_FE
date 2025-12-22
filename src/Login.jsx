@@ -3,6 +3,7 @@ import { useFormik } from "formik";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import API_BASE_URL from "./config/api";
 
 function Login() {
   const [errorMessage, setErrorMessage] = useState("");
@@ -33,7 +34,7 @@ function Login() {
       setLoading(true);
       setErrorMessage("");
       try {
-        const res = await axios.post("http://localhost:5001/users/login", values);
+        const res = await axios.post(`${API_BASE_URL}/users/login`, values);
         
         // Check if response is successful (status 200-299)
         if (res.status >= 200 && res.status < 300 && res.data && res.data.token) {
@@ -263,7 +264,7 @@ function Login() {
                         setSendingResetLink(true);
                         try {
                           const res = await axios.post(
-                            "http://localhost:5001/users/forgetPasswords",
+                            `${API_BASE_URL}/users/forgetPasswords`,
                             { email }
                           );
                           toast.success(res.data.message || "Password reset link sent to your email!");

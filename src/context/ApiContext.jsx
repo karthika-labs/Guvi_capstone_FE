@@ -2,6 +2,7 @@ import { createContext, useState, useEffect } from "react";
 import axios from "axios"; // Or your custom instance: import apiClient from '../api/axiosConfig';
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import API_BASE_URL from "../config/api";
 
 const ApiContext = createContext();
 
@@ -9,9 +10,6 @@ const ApiContext = createContext();
 const CLOUD_NAME = "duwrhno5o";
 const UPLOAD_PRESET_RECIPE = "guvi_project_recipe_upload"; // For recipe photos/videos
 const UPLOAD_PRESET_AVATAR = "guvi_project_user_avatar_upload"; // For user profile pictures
-
-// API Constants
-const API_BASE_URL = "http://localhost:5001";
 
 // Utility function to upload image to Cloudinary
 const uploadImageToCloudinary = async (file, cloudName, uploadPreset) => {
@@ -394,7 +392,7 @@ const updateProfile = async (data) => {
   // const updateShoppingList = async (planId, listId, updatedLists) => {
   //   try {
   //     const res = await axios.put(
-  //       `http://localhost:5001/plans/${planId}/lists/${listId}`,
+  //       `${API_BASE_URL}/plans/${planId}/lists/${listId}`,
   //      { lists: updatedLists },
   //       {
   //         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

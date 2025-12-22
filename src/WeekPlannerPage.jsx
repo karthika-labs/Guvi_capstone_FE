@@ -6,8 +6,7 @@ import "react-calendar/dist/Calendar.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
-
-const API_BASE_URL = "http://localhost:5001";
+import API_BASE_URL from "./config/api";
 
 export default function WeekPlannerPage() {
   const navigate = useNavigate();

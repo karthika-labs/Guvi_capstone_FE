@@ -3,6 +3,7 @@ import { useFormik } from "formik";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import API_BASE_URL from "./config/api";
 
 function Register() {
   const [errorMessage, setErrorMessage] = useState("");
@@ -39,7 +40,7 @@ function Register() {
       setLoading(true);
       setErrorMessage("");
       try {
-        const res = await axios.post("http://localhost:5001/users/register", values);
+        const res = await axios.post(`${API_BASE_URL}/users/register`, values);
         toast.success("Registration Successful! Redirecting to login...");
         setTimeout(() => {
           navigate("/login");
