@@ -274,8 +274,8 @@ const RecipePage = () => {
 
   const copyToClipboard = () => {
     const url = window.location.href;
-    const recipeTitle = recipe.recipeName || "a delicious recipe";
-    const shareText = `Check out this recipe: ${recipeTitle}\n${url}`;
+   
+    const shareText =url
     navigator.clipboard.writeText(shareText).then(
       () => {
         setShareMessage("Link copied to clipboard!");
