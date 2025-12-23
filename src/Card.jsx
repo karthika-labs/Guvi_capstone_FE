@@ -133,9 +133,9 @@ const copyToClipboard = () => {
   if (!recipe || !recipe._id || !user) return null;
 
   return (
-    <div className="rounded-lg border border-[#2d2d2d] bg-[#1a1a1a] shadow-lg overflow-hidden flex flex-col">
+    <div className="rounded-lg border border-[#2d2d2d] bg-[#1a1a1a] shadow-lg overflow-hidden w-full max-w-xs gap-2  flex flex-col">
       {/* IMAGE */}
-      <div className="relative w-full">
+      <div className="relative w-full  flex justify-center items-center">
         <Swiper
           modules={[Pagination, Navigation]}
           pagination={{

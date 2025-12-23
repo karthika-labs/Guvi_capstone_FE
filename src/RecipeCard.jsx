@@ -347,11 +347,13 @@ export default function RecipeCard({ recipes: propRecipes }) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  lg:grid-cols-4 gap-6 p-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  lg:grid-cols-4 gap-8 px-4 justify-center">
       {recipes
         .filter(r => r && r._id)
         .map(recipe => (
+          <div key={recipe._id} className=" flex justify-center   ">
           <Card key={recipe._id} recipe={recipe} />
+          </div>
         ))}
     </div>
   );
