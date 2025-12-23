@@ -584,7 +584,7 @@ export default function WeekPlannerPage() {
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <div className="">
+          
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
@@ -621,7 +621,7 @@ export default function WeekPlannerPage() {
                 ← Back to Dashboard
               </Link>
             </div>
-          </div>
+         
         </div>
 
         <div className="flex gap-6">
