@@ -396,7 +396,7 @@ const handleDownloadPDF = async () => {
               <p className="text-gray-400 mt-2">Manage your shopping items</p>
             </div>
             <Link
-              to="/weekplans"
+              to={`/planner/${id}`}
               className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

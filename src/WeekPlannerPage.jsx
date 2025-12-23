@@ -35,7 +35,7 @@ export default function WeekPlannerPage() {
     if (!currentWeek?.plans?.[dayName.toLowerCase()]) return 0;
     const dayPlans = currentWeek.plans[dayName.toLowerCase()];
     const meals = ["breakfast", "lunch", "dinner"];
-    return meals.filter(meal => dayPlans[meal]).length;
+    return meals.filter((meal) => dayPlans[meal]).length;
   };
 
   // Helper function to get meal types for a day
@@ -43,7 +43,7 @@ export default function WeekPlannerPage() {
     if (!currentWeek?.plans?.[dayName.toLowerCase()]) return [];
     const dayPlans = currentWeek.plans[dayName.toLowerCase()];
     const meals = ["breakfast", "lunch", "dinner"];
-    return meals.filter(meal => dayPlans[meal]);
+    return meals.filter((meal) => dayPlans[meal]);
   };
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -71,45 +71,56 @@ export default function WeekPlannerPage() {
 
       setLoading(true);
       setError(null);
-      
+
       try {
         console.log("Loading week with id:", id);
         const week = await fetchWeekById(id);
         console.log("Fetched week data:", week);
-        
+
         if (!week) {
           console.error("Week not found");
           setError("Week plan not found");
           setLoading(false);
           return;
         }
-        
+
         setCurrentWeek(week);
 
         // Build the 7 days - normalize to avoid timezone issues
         if (week.weekStartDate) {
           const startDateStr = String(week.weekStartDate).trim();
           console.log("Parsing weekStartDate:", startDateStr);
-          
+
           try {
-            const dateParts = startDateStr.split('-');
+            const dateParts = startDateStr.split("-");
             if (dateParts.length === 3) {
               const year = parseInt(dateParts[0], 10);
               const month = parseInt(dateParts[1], 10);
               const day = parseInt(dateParts[2], 10);
-              
-              if (!isNaN(year) && !isNaN(month) && !isNaN(day) && year > 0 && month > 0 && month <= 12 && day > 0 && day <= 31) {
+
+              if (
+                !isNaN(year) &&
+                !isNaN(month) &&
+                !isNaN(day) &&
+                year > 0 &&
+                month > 0 &&
+                month <= 12 &&
+                day > 0 &&
+                day <= 31
+              ) {
                 const start = new Date(year, month - 1, day); // month is 0-indexed
-                
+
                 if (!isNaN(start.getTime())) {
                   const days = Array.from({ length: 7 }).map((_, i) => {
                     const d = new Date(start);
                     d.setDate(d.getDate() + i);
                     const year = d.getFullYear();
-                    const month = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
+                    const month = String(d.getMonth() + 1).padStart(2, "0");
+                    const day = String(d.getDate()).padStart(2, "0");
                     return {
-                      dayName: d.toLocaleDateString("en-US", { weekday: "long" }),
+                      dayName: d.toLocaleDateString("en-US", {
+                        weekday: "long",
+                      }),
                       date: `${year}-${month}-${day}`,
                     };
                   });
@@ -138,7 +149,11 @@ export default function WeekPlannerPage() {
         }
       } catch (error) {
         console.error("Error loading week:", error);
-        setError(error.response?.data?.message || error.message || "Failed to load week plan");
+        setError(
+          error.response?.data?.message ||
+            error.message ||
+            "Failed to load week plan"
+        );
         toast.error("Failed to load week plan");
       } finally {
         setLoading(false);
@@ -158,29 +173,41 @@ export default function WeekPlannerPage() {
 
     // Ensure we have the latest week plans before checking
     await fetchWeekPlans();
-    
+
     // Wait a bit for state to update (or use the returned data)
     const plansResponse = await axios.get(`${API_BASE_URL}/plans`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
     const currentWeekPlans = plansResponse.data.getPlan || [];
-    
+
     console.log("Checking for overlaps with weekPlans:", currentWeekPlans);
     console.log("Selected date:", selectedDate);
 
     // Normalize date to avoid timezone issues - extract year, month, day
     const selected = new Date(selectedDate);
-    const normalizedStartDate = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
-    
+
+    const normalizedStartDate = new Date(
+      selected.getFullYear(),
+      selected.getMonth(),
+      selected.getDate()
+    );
+
     console.log("Normalized start date:", normalizedStartDate);
+
+    //     const normalizedStartDate = new Date(
+    //       selected.getFullYear(),
+    //       selected.getMonth(),
+    //       selected.getDate()
+    //     );
+    // >>>>>>> Stashed changes
 
     const newWeekDates = Array.from({ length: 7 }).map((_, i) => {
       const d = new Date(normalizedStartDate);
       d.setDate(d.getDate() + i);
       // Format as YYYY-MM-DD without timezone conversion
       const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     });
 
@@ -191,14 +218,20 @@ export default function WeekPlannerPage() {
     const newWeekStart = new Date(normalizedStartDate);
     const newWeekEnd = new Date(newWeekStart);
     newWeekEnd.setDate(newWeekEnd.getDate() + 6);
-    
+
     console.log("New week date range:", {
-      start: newWeekStart.toISOString().split('T')[0],
-      end: newWeekEnd.toISOString().split('T')[0]
+      start: newWeekStart.toISOString().split("T")[0],
+      end: newWeekEnd.toISOString().split("T")[0],
     });
 
-    if (currentWeekPlans && Array.isArray(currentWeekPlans) && currentWeekPlans.length > 0) {
-      console.log(`Checking ${currentWeekPlans.length} existing week plans for overlaps...`);
+    if (
+      currentWeekPlans &&
+      Array.isArray(currentWeekPlans) &&
+      currentWeekPlans.length > 0
+    ) {
+      console.log(
+        `Checking ${currentWeekPlans.length} existing week plans for overlaps...`
+      );
 
       for (const week of currentWeekPlans) {
         if (!week || !week.weekStartDate) {
@@ -209,47 +242,70 @@ export default function WeekPlannerPage() {
         try {
           // Parse existing week start date
           const weekStartDateStr = String(week.weekStartDate).trim();
-          const dateParts = weekStartDateStr.split('-');
-          
+          const dateParts = weekStartDateStr.split("-");
+
           if (dateParts.length !== 3) {
-            console.log("Skipping week - invalid date format:", weekStartDateStr);
+            console.log(
+              "Skipping week - invalid date format:",
+              weekStartDateStr
+            );
             continue;
           }
 
-          const [existingYear, existingMonth, existingDay] = dateParts.map(Number);
-          
+          const [existingYear, existingMonth, existingDay] =
+            dateParts.map(Number);
+
           // Validate date values
-          if (isNaN(existingYear) || isNaN(existingMonth) || isNaN(existingDay)) {
-            console.log("Skipping week - invalid date values:", { existingYear, existingMonth, existingDay });
+          if (
+            isNaN(existingYear) ||
+            isNaN(existingMonth) ||
+            isNaN(existingDay)
+          ) {
+            console.log("Skipping week - invalid date values:", {
+              existingYear,
+              existingMonth,
+              existingDay,
+            });
             continue;
           }
 
-          const existingWeekStart = new Date(existingYear, existingMonth - 1, existingDay);
-          
+          const existingWeekStart = new Date(
+            existingYear,
+            existingMonth - 1,
+            existingDay
+          );
+
           // Validate the date object
           if (isNaN(existingWeekStart.getTime())) {
-            console.log("Skipping week - invalid date object:", existingWeekStart);
+            console.log(
+              "Skipping week - invalid date object:",
+              existingWeekStart
+            );
             continue;
           }
 
           const existingWeekEnd = new Date(existingWeekStart);
           existingWeekEnd.setDate(existingWeekEnd.getDate() + 6);
-          
+
           console.log("Comparing with existing week:", {
             id: week._id,
-            start: existingWeekStart.toISOString().split('T')[0],
-            end: existingWeekEnd.toISOString().split('T')[0]
+            start: existingWeekStart.toISOString().split("T")[0],
+            end: existingWeekEnd.toISOString().split("T")[0],
           });
 
           // Check if dates overlap using date range comparison
-          const overlapCondition1 = newWeekStart >= existingWeekStart && newWeekStart <= existingWeekEnd;
-          const overlapCondition2 = newWeekEnd >= existingWeekStart && newWeekEnd <= existingWeekEnd;
-          const overlapCondition3 = newWeekStart <= existingWeekStart && newWeekEnd >= existingWeekEnd;
-          
+          const overlapCondition1 =
+            newWeekStart >= existingWeekStart &&
+            newWeekStart <= existingWeekEnd;
+          const overlapCondition2 =
+            newWeekEnd >= existingWeekStart && newWeekEnd <= existingWeekEnd;
+          const overlapCondition3 =
+            newWeekStart <= existingWeekStart && newWeekEnd >= existingWeekEnd;
+
           console.log("Overlap conditions:", {
             condition1: overlapCondition1,
             condition2: overlapCondition2,
-            condition3: overlapCondition3
+            condition3: overlapCondition3,
           });
 
           if (overlapCondition1 || overlapCondition2 || overlapCondition3) {
@@ -258,15 +314,43 @@ export default function WeekPlannerPage() {
               _id: week._id,
               weekStartDate: week.weekStartDate,
               startDate: existingWeekStart,
-              endDate: existingWeekEnd
+              endDate: existingWeekEnd,
             };
             break; // Found first overlapping week
           }
         } catch (parseErr) {
           // Skip this week if there's an error parsing its date
-          console.warn("Error parsing existing week date:", week.weekStartDate, parseErr);
+          console.warn(
+            "Error parsing existing week date:",
+            week.weekStartDate,
+            parseErr
+          );
           continue;
         }
+
+        //     for (const week of weekPlans) {
+        //       // Normalize date to avoid timezone issues
+        //       const weekStartDateStr = week.weekStartDate;
+        //       const [year, month, day] = weekStartDateStr.split("-").map(Number);
+        //       const weekStart = new Date(year, month - 1, day); // month is 0-indexed
+
+        //       const weekDates = Array.from({ length: 7 }).map((_, i) => {
+        //         const d = new Date(weekStart);
+        //         d.setDate(d.getDate() + i);
+        //         const year = d.getFullYear();
+        //         const month = String(d.getMonth() + 1).padStart(2, "0");
+        //         const day = String(d.getDate()).padStart(2, "0");
+        //         return `${year}-${month}-${day}`;
+        //       });
+
+        //       const overlapping = newWeekDates.filter((date) =>
+        //         weekDates.includes(date)
+        //       );
+        //       if (overlapping.length > 0) {
+        //         overlappingWeek = week;
+        //         overlappingDates = overlapping;
+        //         break; // Found first overlapping week
+        // >>>>>>> Stashed changes
       }
     } else {
       console.log("No existing week plans to check against");
@@ -277,6 +361,29 @@ export default function WeekPlannerPage() {
       setOverlappingPlan(overlappingWeek);
       setShowOverlapModal(true);
       return;
+
+      //     if (overlappingWeek && overlappingDates.length > 0) {
+      //       // Format the existing week's date range (start and end only) - normalize to avoid timezone issues
+      //       const existingWeekStartDateStr = overlappingWeek.weekStartDate;
+      //       const [year, month, day] = existingWeekStartDateStr
+      //         .split("-")
+      //         .map(Number);
+      //       const existingWeekStart = new Date(year, month - 1, day); // month is 0-indexed
+      //       const existingWeekEnd = new Date(existingWeekStart);
+      //       existingWeekEnd.setDate(existingWeekEnd.getDate() + 6); // +6 gives 7 days total
+      //       const existingWeekStartFormatted = existingWeekStart.toLocaleDateString(
+      //         "en-US",
+      //         { month: "short", day: "numeric", year: "numeric" }
+      //       );
+      //       const existingWeekEndFormatted = existingWeekEnd.toLocaleDateString(
+      //         "en-US",
+      //         { month: "short", day: "numeric", year: "numeric" }
+      //       );
+
+      //       return toast.error(
+      //         `The dates in this week already exist in the ${existingWeekStartFormatted} - ${existingWeekEndFormatted} plan`
+      //       );
+      // >>>>>>> Stashed changes
     }
 
     console.log("No overlap found, proceeding to create week plan");
@@ -285,14 +392,18 @@ export default function WeekPlannerPage() {
     try {
       // Normalize date to avoid timezone issues
       const selected = new Date(selectedDate);
-      const normalizedStartDate = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
-      
+      const normalizedStartDate = new Date(
+        selected.getFullYear(),
+        selected.getMonth(),
+        selected.getDate()
+      );
+
       // Format as YYYY-MM-DD without timezone conversion
       const year = normalizedStartDate.getFullYear();
-      const month = String(normalizedStartDate.getMonth() + 1).padStart(2, '0');
-      const day = String(normalizedStartDate.getDate()).padStart(2, '0');
+      const month = String(normalizedStartDate.getMonth() + 1).padStart(2, "0");
+      const day = String(normalizedStartDate.getDate()).padStart(2, "0");
       const formattedDate = `${year}-${month}-${day}`;
-      
+
       const week = await createWeekPlan({ weekStartDate: formattedDate });
       setCurrentWeek(week);
 
@@ -301,8 +412,8 @@ export default function WeekPlannerPage() {
         const d = new Date(normalizedStartDate);
         d.setDate(d.getDate() + i);
         const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
         return {
           dayName: d.toLocaleDateString("en-US", { weekday: "long" }),
           date: `${year}-${month}-${day}`,
@@ -316,32 +427,39 @@ export default function WeekPlannerPage() {
       if (err.response?.data?.existingPlan) {
         // Backend detected overlap - format the dates properly
         const existingPlan = err.response.data.existingPlan;
-        const [startYear, startMonth, startDay] = existingPlan.startDate.split('-').map(Number);
-        const [endYear, endMonth, endDay] = existingPlan.endDate.split('-').map(Number);
-        
+        const [startYear, startMonth, startDay] = existingPlan.startDate
+          .split("-")
+          .map(Number);
+        const [endYear, endMonth, endDay] = existingPlan.endDate
+          .split("-")
+          .map(Number);
+
         setOverlappingPlan({
           _id: existingPlan._id,
           weekStartDate: existingPlan.weekStartDate,
           startDate: new Date(startYear, startMonth - 1, startDay),
-          endDate: new Date(endYear, endMonth - 1, endDay)
+          endDate: new Date(endYear, endMonth - 1, endDay),
         });
         setShowOverlapModal(true);
-      } else if (err.response?.data?.message && err.response.data.message.includes("already exists")) {
+      } else if (
+        err.response?.data?.message &&
+        err.response.data.message.includes("already exists")
+      ) {
         // Try to extract existing plan info from error
         toast.error(err.response.data.message);
         // Still try to show modal if we can get the plan info
         if (err.response.data.plan) {
           const plan = err.response.data.plan;
-          const [year, month, day] = plan.weekStartDate.split('-').map(Number);
+          const [year, month, day] = plan.weekStartDate.split("-").map(Number);
           const existingWeekStart = new Date(year, month - 1, day);
           const existingWeekEnd = new Date(existingWeekStart);
           existingWeekEnd.setDate(existingWeekEnd.getDate() + 6);
-          
+
           setOverlappingPlan({
             _id: plan._id,
             weekStartDate: plan.weekStartDate,
             startDate: existingWeekStart,
-            endDate: existingWeekEnd
+            endDate: existingWeekEnd,
           });
           setShowOverlapModal(true);
         }
@@ -365,10 +483,15 @@ export default function WeekPlannerPage() {
     const { dayName, meal } = selectedMealCell;
 
     try {
-      await updateMeal(currentWeek._id, dayName.toLowerCase(), meal, recipe._id);
+      await updateMeal(
+        currentWeek._id,
+        dayName.toLowerCase(),
+        meal,
+        recipe._id
+      );
 
       // Wait a bit to ensure backend has processed the update
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const updatedWeek = await fetchWeekById(currentWeek._id);
       setCurrentWeek(updatedWeek);
@@ -400,7 +523,7 @@ export default function WeekPlannerPage() {
       await updateMeal(currentWeek._id, dayName.toLowerCase(), meal, null);
 
       // Wait a bit to ensure backend has processed the update
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const updatedWeek = await fetchWeekById(currentWeek._id);
       setCurrentWeek(updatedWeek);
@@ -435,7 +558,6 @@ export default function WeekPlannerPage() {
     });
   };
 
-  
   const handleList = async () => {
     if (!currentWeek?._id) {
       toast.error("Please create or select a week plan first");
@@ -462,21 +584,43 @@ export default function WeekPlannerPage() {
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Week Planner
-              </h1>
-              <p className="text-gray-400 mt-2">Plan your meals for the week</p>
-            </div>
-            {!isEdit && (
+          <div className="">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Week Planner
+                </h1>
+                <p className="text-gray-400 mt-2">
+                  Plan your meals for the week
+                </p>
+              </div>
+              {/* <Link
+                to="/weekplans"
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition flex items-center gap-2"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                Back
+              </Link> */}
+
               <Link
                 to="/weekplans"
                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition"
               >
                 ← Back to Dashboard
               </Link>
-            )}
+            </div>
           </div>
         </div>
 
@@ -525,7 +669,8 @@ export default function WeekPlannerPage() {
                     {isEdit ? "Edit Week Plan" : "Week Plan"}
                   </h2>
                   <p className="text-gray-400 text-sm mt-1">
-                    {weekDays.length > 0 && `${weekDays[0].date} - ${weekDays[6]?.date}`}
+                    {weekDays.length > 0 &&
+                      `${weekDays[0].date} - ${weekDays[6]?.date}`}
                   </p>
                 </div>
                 <button
@@ -558,7 +703,9 @@ export default function WeekPlannerPage() {
             ) : error ? (
               <div className="bg-[#1a1a2e] rounded-2xl border border-red-900/40 p-12 text-center">
                 <div className="text-6xl mb-4">❌</div>
-                <p className="text-red-400 text-lg mb-2">Error loading week plan</p>
+                <p className="text-red-400 text-lg mb-2">
+                  Error loading week plan
+                </p>
                 <p className="text-gray-400 text-sm">{error}</p>
                 <button
                   onClick={() => window.location.reload()}
@@ -571,7 +718,9 @@ export default function WeekPlannerPage() {
               <div className="bg-[#1a1a2e] rounded-2xl border border-purple-900/40 p-12 text-center">
                 <div className="text-6xl mb-4">📅</div>
                 <p className="text-gray-400 text-lg">
-                  {!isEdit ? "Select a start date to view the week." : "No week data available"}
+                  {!isEdit
+                    ? "Select a start date to view the week."
+                    : "No week data available"}
                 </p>
               </div>
             ) : (
@@ -598,19 +747,23 @@ export default function WeekPlannerPage() {
                           {getMealCount(day.dayName) > 0 && (
                             <div className="flex items-center gap-2">
                               <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">
-                                {getMealCount(day.dayName)} meal{getMealCount(day.dayName) > 1 ? 's' : ''} added
+                                {getMealCount(day.dayName)} meal
+                                {getMealCount(day.dayName) > 1 ? "s" : ""} added
                               </span>
                               <div className="flex gap-1">
                                 {getMealTypes(day.dayName).map((meal) => (
                                   <span
                                     key={meal}
                                     className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                                      meal === 'breakfast' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                                      meal === 'lunch' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                                      'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                      meal === "breakfast"
+                                        ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                        : meal === "lunch"
+                                        ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                        : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
                                     }`}
                                   >
-                                    {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                                    {meal.charAt(0).toUpperCase() +
+                                      meal.slice(1)}
                                   </span>
                                 ))}
                               </div>
@@ -626,11 +779,16 @@ export default function WeekPlannerPage() {
                   </div>
 
                   {expandedDay === day.dayName && (
-                    <div className="p-5 bg-[#0f0f1a] border-t border-purple-900/40" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="p-5 bg-[#0f0f1a] border-t border-purple-900/40"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {["breakfast", "lunch", "dinner"].map((meal) => {
                           const data =
-                            currentWeek?.plans?.[day.dayName.toLowerCase()]?.[meal];
+                            currentWeek?.plans?.[day.dayName.toLowerCase()]?.[
+                              meal
+                            ];
                           const mealColors = {
                             breakfast: "from-yellow-500 to-orange-500",
                             lunch: "from-green-500 to-emerald-500",
@@ -649,7 +807,10 @@ export default function WeekPlannerPage() {
                               {data ? (
                                 <>
                                   <img
-                                    src={data.recipeId?.photoUrl?.[0] || "https://via.placeholder.com/100"}
+                                    src={
+                                      data.recipeId?.photoUrl?.[0] ||
+                                      "https://via.placeholder.com/100"
+                                    }
                                     className="w-20 h-20 rounded-xl object-cover mb-3 shadow-lg border-2 border-white/20"
                                     alt={data.recipeId?.recipeName}
                                   />
@@ -669,8 +830,12 @@ export default function WeekPlannerPage() {
                               ) : (
                                 <div className="text-center">
                                   <div className="text-4xl mb-2">🍽️</div>
-                                  <p className="text-white font-medium capitalize">{meal}</p>
-                                  <p className="text-white/70 text-xs mt-1">Click to add</p>
+                                  <p className="text-white font-medium capitalize">
+                                    {meal}
+                                  </p>
+                                  <p className="text-white/70 text-xs mt-1">
+                                    Click to add
+                                  </p>
                                 </div>
                               )}
                             </div>
@@ -687,8 +852,14 @@ export default function WeekPlannerPage() {
       </div>
 
       {modalOpen && selectedMealCell && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setModalOpen(false)}>
-          <div className="bg-[#1a1a2e] p-6 rounded-2xl border border-purple-900/40 w-full max-w-2xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setModalOpen(false)}
+        >
+          <div
+            className="bg-[#1a1a2e] p-6 rounded-2xl border border-purple-900/40 w-full max-w-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold capitalize text-white">
                 Select {selectedMealCell.meal}
@@ -697,15 +868,27 @@ export default function WeekPlannerPage() {
                 onClick={() => setModalOpen(false)}
                 className="text-gray-400 hover:text-white transition"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
 
             <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
               {getFilteredRecipes(selectedMealCell.meal).length === 0 ? (
-                <p className="text-gray-400 text-center py-8">No recipes available for {selectedMealCell.meal}</p>
+                <p className="text-gray-400 text-center py-8">
+                  No recipes available for {selectedMealCell.meal}
+                </p>
               ) : (
                 getFilteredRecipes(selectedMealCell.meal).map((r) => (
                   <div
@@ -723,11 +906,23 @@ export default function WeekPlannerPage() {
                         {r.recipeName}
                       </p>
                       {r.description && (
-                        <p className="text-gray-400 text-sm line-clamp-1">{r.description}</p>
+                        <p className="text-gray-400 text-sm line-clamp-1">
+                          {r.description}
+                        </p>
                       )}
                     </div>
-                    <svg className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <svg
+                      className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </div>
                 ))
@@ -739,13 +934,21 @@ export default function WeekPlannerPage() {
 
       {/* Overlap Modal */}
       {showOverlapModal && overlappingPlan && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => {
-          setShowOverlapModal(false);
-          setOverlappingPlan(null);
-        }}>
-          <div className="bg-[#1a1a2e] p-6 rounded-2xl border border-purple-900/40 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowOverlapModal(false);
+            setOverlappingPlan(null);
+          }}
+        >
+          <div
+            className="bg-[#1a1a2e] p-6 rounded-2xl border border-purple-900/40 w-full max-w-md shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-white">Date Already Exists</h2>
+              <h2 className="text-2xl font-bold text-white">
+                Date Already Exists
+              </h2>
               <button
                 onClick={() => {
                   setShowOverlapModal(false);
@@ -753,8 +956,18 @@ export default function WeekPlannerPage() {
                 }}
                 className="text-gray-400 hover:text-white transition"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -762,25 +975,31 @@ export default function WeekPlannerPage() {
               <p className="text-gray-300 mb-4 text-center">
                 This date is already included in existing plans{" "}
                 <span className="text-purple-400 font-semibold">
-                  {overlappingPlan.startDate instanceof Date 
+                  {overlappingPlan.startDate instanceof Date
                     ? overlappingPlan.startDate.toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                       })
-                    : new Date(overlappingPlan.startDate).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
+                    : new Date(overlappingPlan.startDate).toLocaleDateString(
+                        "en-US",
+                        {
+                          month: "short",
+                          day: "numeric",
+                        }
+                      )}
                   {" - "}
                   {overlappingPlan.endDate instanceof Date
                     ? overlappingPlan.endDate.toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
                       })
-                    : new Date(overlappingPlan.endDate).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
+                    : new Date(overlappingPlan.endDate).toLocaleDateString(
+                        "en-US",
+                        {
+                          month: "short",
+                          day: "numeric",
+                        }
+                      )}
                 </span>
               </p>
             </div>

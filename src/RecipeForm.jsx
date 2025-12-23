@@ -246,7 +246,7 @@ function RecipeForm() {
         {/* Close/Back button */}
         <button
           type="button"
-          onClick={() => navigate("/recipes")}
+          onClick={() => navigate(-1)}
           className="absolute cursor-pointer top-4 right-4 text-gray-400 font-bold text-4xl hover:text-purple-400 transition-colors z-10"
           title="Back to Recipes"
         >

@@ -458,7 +458,7 @@ const handleSearch = async () => {
         )}
 
         <main className="w-full">
-          <section className="mt-8 md:mt-12 w-full px-4">
+          <section className="mt-8 md:mt-12 w-full p-4">
             <div className="flex flex-col items-center gap-6 mb-8">
               {/* Enhanced Tab Switcher */}
               <div className="flex gap-2 bg-[#1a1a2e] rounded-xl p-1.5 border border-purple-900/40 shadow-lg">
