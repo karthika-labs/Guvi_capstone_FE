@@ -20,8 +20,16 @@ import {
 const RecipePage = () => {
   const { recipeId } = useParams();
   const navigate = useNavigate();
-  const { getRecipeById, deleteRecipe, postRating, updateRating, postComment, updateComment, deleteComment, user } =
-    useContext(ApiContext);
+  const {
+    getRecipeById,
+    deleteRecipe,
+    postRating,
+    updateRating,
+    postComment,
+    updateComment,
+    deleteComment,
+    user,
+  } = useContext(ApiContext);
 
   const [recipe, setRecipe] = useState({
     ratings: [],
@@ -46,6 +54,10 @@ const RecipePage = () => {
   const [modalImageIndex, setModalImageIndex] = useState(0); // New state for image in gallery modal
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // comment delete
+  const [showDeleteCommentModal, setShowDeleteCommentModal] = useState(false);
+  const [selectedCommentId, setSelectedCommentId] = useState(null);
 
   const fetchRecipe = async (isUpdate = false) => {
     if (!isUpdate) setIsLoading(true);
@@ -189,19 +201,23 @@ const RecipePage = () => {
     }
   };
 
-  const handleDeleteComment = async (commentId) => {
-    if (!window.confirm("Are you sure you want to delete this comment?")) {
-      return;
-    }
+  const openDeleteCommentModal = (commentId) => {
+    setSelectedCommentId(commentId);
+    setShowDeleteCommentModal(true);
+  };
 
+  const handleDeleteComment = async () => {
+    setShowDeleteCommentModal(false);
     setIsSubmitting(true);
+
     try {
-      await deleteComment(commentId);
+      await deleteComment(selectedCommentId);
       await fetchRecipe(true);
     } catch (err) {
       console.error("Failed to delete comment:", err);
     } finally {
       setIsSubmitting(false);
+      setSelectedCommentId(null);
     }
   };
 
@@ -223,7 +239,8 @@ const RecipePage = () => {
   };
 
   // Check if current user is the recipe owner
-  const isRecipeOwner = user && recipe.userId && String(user._id) === String(recipe.userId._id);
+  const isRecipeOwner =
+    user && recipe.userId && String(user._id) === String(recipe.userId._id);
 
   // This function will now simply open the share modal.
   const handleShare = () => {
@@ -391,7 +408,7 @@ const RecipePage = () => {
         <div className="absolute top-4 left-4 z-20">
           <Link
             to="/recipes"
-            className="flex items-center px-4 py-2 bg-gray-800 bg-opacity-75 rounded-full text-white hover:bg-gray-700 hover:text-purple-400 transition duration-300"
+            className="flex cursor-pointer items-center px-4 py-2 bg-gray-800 bg-opacity-75 rounded-full text-white hover:bg-gray-700 hover:text-purple-400 transition duration-300"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -414,7 +431,7 @@ const RecipePage = () => {
             <>
               <button
                 onClick={handleEditRecipe}
-                className="flex items-center px-4 py-2 bg-blue-600 bg-opacity-75 rounded-full text-white hover:bg-blue-700 transition duration-300"
+                className=" cursor-pointer flex items-center px-4 py-2 bg-blue-600 bg-opacity-75 rounded-full text-white hover:bg-blue-700 transition duration-300"
                 title="Edit Recipe"
               >
                 <FaEdit className="mr-2" />
@@ -422,7 +439,7 @@ const RecipePage = () => {
               </button>
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="flex items-center px-4 py-2 bg-red-600 bg-opacity-75 rounded-full text-white hover:bg-red-700 transition duration-300"
+                className="flex cursor-pointer items-center px-4 py-2 bg-red-600 bg-opacity-75 rounded-full text-white hover:bg-red-700 transition duration-300"
                 title="Delete Recipe"
               >
                 <FaTrash className="mr-2" />
@@ -432,7 +449,7 @@ const RecipePage = () => {
           )}
           <button
             onClick={handleShare}
-            className="flex items-center px-4 py-2 bg-gray-800 bg-opacity-75 rounded-full text-white hover:bg-gray-700 hover:text-purple-400 transition duration-300"
+            className="flex cursor-pointer items-center px-4 py-2 bg-gray-800 bg-opacity-75 rounded-full text-white hover:bg-gray-700 hover:text-purple-400 transition duration-300"
           >
             <FaShareAlt className="mr-2" />
             Share
@@ -608,20 +625,35 @@ const RecipePage = () => {
                         alt={recipe.userId.username || "User"}
                         className="w-16 h-16 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-purple-500 transition"
                         onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextElementSibling.style.display = 'flex';
+                          e.target.style.display = "none";
+                          e.target.nextElementSibling.style.display = "flex";
                         }}
                       />
                     ) : null}
-                    <div className={`w-16 h-16 rounded-full border-2 border-purple-500/50 bg-[#1a1a2e] flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-purple-500 transition ${recipe.userId.avatar ? 'hidden' : ''}`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <div
+                      className={`w-16 h-16 rounded-full border-2 border-purple-500/50 bg-[#1a1a2e] flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-purple-500 transition ${
+                        recipe.userId.avatar ? "hidden" : ""
+                      }`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-10 h-10 text-purple-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
                       </svg>
                     </div>
                   </Link>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <Link 
+                      <Link
                         to={`/profile/${recipe.userId._id}`}
                         className="hover:text-purple-400 transition"
                       >
@@ -629,13 +661,15 @@ const RecipePage = () => {
                           {recipe.userId.username || "Unknown User"}
                         </p>
                       </Link>
-                      <FollowButton 
-                        userId={recipe.userId._id} 
+                      <FollowButton
+                        userId={recipe.userId._id}
                         username={recipe.userId.username || recipe.userId.name}
                       />
                     </div>
                     {recipe.userId.name && (
-                      <p className="text-gray-400 text-sm mt-1">{recipe.userId.name}</p>
+                      <p className="text-gray-400 text-sm mt-1">
+                        {recipe.userId.name}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -717,7 +751,10 @@ const RecipePage = () => {
               <div className="space-y-4 mt-6 max-h-96 overflow-y-auto pr-2 overflow-y-scroll no-scrollbar">
                 {recipe.comments && recipe.comments.length > 0 ? (
                   [...recipe.comments].reverse().map((comment) => {
-                    const isCommentOwner = user && String(comment.userId?._id || comment.userId) === String(user._id);
+                    const isCommentOwner =
+                      user &&
+                      String(comment.userId?._id || comment.userId) ===
+                        String(user._id);
                     const isEditing = editingCommentId === comment._id;
 
                     return (
@@ -726,20 +763,47 @@ const RecipePage = () => {
                         className="bg-gray-800 p-4 rounded-lg"
                       >
                         <div className="flex items-start space-x-3">
-                          {comment.userId?.avatar || comment.userId?.avatarUrl ? (
+                          {comment.userId?.avatar ||
+                          comment.userId?.avatarUrl ? (
                             <img
-                              src={comment.userId.avatar || comment.userId.avatarUrl}
-                              alt={comment.userId?.name || comment.userId?.username || "User"}
+                              src={
+                                comment.userId.avatar ||
+                                comment.userId.avatarUrl
+                              }
+                              alt={
+                                comment.userId?.name ||
+                                comment.userId?.username ||
+                                "User"
+                              }
                               className="w-10 h-10 rounded-full object-cover"
                               onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextElementSibling.style.display = 'flex';
+                                e.target.style.display = "none";
+                                e.target.nextElementSibling.style.display =
+                                  "flex";
                               }}
                             />
                           ) : null}
-                          <div className={`w-10 h-10 rounded-full border border-purple-500/50 bg-[#1a1a2e] flex items-center justify-center ${comment.userId?.avatar || comment.userId?.avatarUrl ? 'hidden' : ''}`}>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          <div
+                            className={`w-10 h-10 rounded-full border border-purple-500/50 bg-[#1a1a2e] flex items-center justify-center ${
+                              comment.userId?.avatar ||
+                              comment.userId?.avatarUrl
+                                ? "hidden"
+                                : ""
+                            }`}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="w-6 h-6 text-purple-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
                             </svg>
                           </div>
                           <div className="flex-1">
@@ -775,21 +839,24 @@ const RecipePage = () => {
                               </div>
                               <div className="flex items-center gap-2">
                                 <p className="text-xs text-gray-400">
-                                  {new Date(comment.createdAt).toLocaleDateString()}
+                                  {new Date(
+                                    comment.createdAt
+                                  ).toLocaleDateString()}
                                 </p>
                                 {isCommentOwner && !isEditing && (
                                   <div className="flex gap-2">
                                     <button
                                       onClick={() => handleEditComment(comment)}
-                                      className="text-xs text-blue-400 hover:text-blue-300 transition"
+                                      className="text-s text-blue-400 hover:text-blue-300 transition  cursor-pointer hover:bg-blue-400/20 px-2 py-1 rounded"
                                       disabled={isSubmitting}
                                     >
                                       Edit
                                     </button>
                                     <button
-                                      onClick={() => handleDeleteComment(comment._id)}
-                                      className="text-xs text-red-400 hover:text-red-300 transition"
-                                      disabled={isSubmitting}
+                                      onClick={() =>
+                                        openDeleteCommentModal(comment._id)
+                                      }
+                                      className="text-red-500 hover:text-red-300 text-s cursor-pointer  transition hover:bg-red-400/20 px-2 py-1 rounded"
                                     >
                                       Delete
                                     </button>
@@ -801,7 +868,9 @@ const RecipePage = () => {
                               <div className="mt-2">
                                 <textarea
                                   value={editingCommentText}
-                                  onChange={(e) => setEditingCommentText(e.target.value)}
+                                  onChange={(e) =>
+                                    setEditingCommentText(e.target.value)
+                                  }
                                   className="w-full bg-gray-700 text-white p-2 rounded-lg focus:ring-2 focus:ring-red-500 transition mb-2"
                                   rows="2"
                                   disabled={isSubmitting}
@@ -815,7 +884,9 @@ const RecipePage = () => {
                                     Cancel
                                   </button>
                                   <button
-                                    onClick={() => handleUpdateComment(comment._id)}
+                                    onClick={() =>
+                                      handleUpdateComment(comment._id)
+                                    }
                                     className="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded text-white transition disabled:bg-gray-500"
                                     disabled={isSubmitting}
                                   >
@@ -824,7 +895,9 @@ const RecipePage = () => {
                                 </div>
                               </div>
                             ) : (
-                              <p className="text-gray-300 mt-1">{comment.text}</p>
+                              <p className="text-gray-300 mt-1">
+                                {comment.text}
+                              </p>
                             )}
                           </div>
                         </div>
@@ -853,7 +926,11 @@ const RecipePage = () => {
             {/* Close Button */}
             <button
               onClick={() => setShowGalleryModal(false)}
-              className="absolute top-4 right-4 text-white text-3xl z-50 bg-gray-800 rounded-full p-2 hover:bg-gray-700"
+              className="absolute cursor-pointer  transition-all duration-300 ease-out
+    hover:scale-110
+    hover:border-purple-400
+    hover:text-purple-400
+    hover:shadow-[0_0_12px_rgba(168,85,247,0.6)] top-4 right-4 text-white text-5xl z-50 hover:bg-gray-800 rounded-full flex items-center justify-center p-2 bg-gray-700"
             >
               &times;
             </button>
@@ -891,6 +968,18 @@ const RecipePage = () => {
         onConfirm={handleDeleteRecipe}
         title="Delete Recipe"
         message={`Are you sure you want to delete "${recipe.recipeName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmColor="bg-red-600 hover:bg-red-700"
+      />
+
+ {/*  comment Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteCommentModal}
+        onClose={() => setShowDeleteCommentModal(false)}
+        onConfirm={handleDeleteComment}
+        title="Delete Comment"
+        message="Are you sure you want to delete this comment? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
         confirmColor="bg-red-600 hover:bg-red-700"
