@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen righteous-regular bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center justify-center p-4">
       <div className="text-center">
         <h1 className="text-9xl font-bold text-white mb-4">404</h1>
         <h2 className="text-3xl font-semibold text-white mb-4">

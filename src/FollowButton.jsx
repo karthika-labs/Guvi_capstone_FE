@@ -67,19 +67,19 @@ const FollowButton = ({ userId, username, onFollowChange }) => {
       <button
         onClick={handleFollowClick}
         disabled={isLoading}
-        className={`px-2.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap min-w-[70px] ${
+        className={`righteous-regular px-2.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap min-w-[70px] ${
           isFollowing
             ? "bg-gray-700 hover:bg-gray-600 text-white border border-gray-600"
             : "bg-purple-600 hover:bg-purple-700 text-white"
         } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         {isLoading ? (
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-2 righteous-regular">
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             {isFollowing ? "Unfollowing..." : "Following..."}
           </span>
         ) : isFollowing ? (
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 righteous-regular">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"

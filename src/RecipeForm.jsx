@@ -141,7 +141,8 @@ function RecipeForm() {
             navigate(`/recipe/${recipeId}`);
             setToast(false);
           }, 1500);
-        } else {
+        } 
+        else {
           // Create new recipe
           const res = await axios.post(`${API_BASE_URL}/recipes`, values, {
             headers: {
@@ -156,7 +157,8 @@ function RecipeForm() {
         }
 
         console.log("Recipe submitted successfully:", res.data);
-      } catch (e) {
+      } 
+      catch (e) {
         if (e.response && e.response.status === 400) {
           setErrorMessage(e.response.data.message);
         } else {
@@ -219,7 +221,7 @@ function RecipeForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#0f0f1a] text-gray-200 flex justify-center items-center p-8">
+    <div className="min-h-screen righteous-regular bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#0f0f1a] text-gray-200 flex justify-center items-center p-8">
       {loading && (
         <div className="fixed inset-0 bg-black/70 flex flex-col justify-center items-center z-50">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-600 border-t-transparent"></div>

@@ -315,9 +315,12 @@ const ProfilePage = () => {
 
   if (loading || !displayUser) {
     return (
-      <p className="text-center mt-20 text-gray-500 text-sm">
-        Loading profile...
-      </p>
+      <div className="fixed inset-0 bg-black/70 flex flex-col justify-center items-center z-50">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-600 border-t-transparent"></div>
+        <p className="mt-4 text-purple-400 text-lg font-semibold">
+          loading... Please wait
+        </p>
+      </div>
     );
   }
 
@@ -455,7 +458,7 @@ const ProfilePage = () => {
 
   console.log("gridData:", gridData);
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#0f0f1a] text-gray-200">
+    <div className="min-h-screen  righteous-regular bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#0f0f1a] text-gray-200">
       <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
         {/* Back Button */}
         <button
@@ -790,7 +793,7 @@ const ProfilePage = () => {
             </div>
             <div className="overflow-y-auto p-4">
               {loadingLists ? (
-                <p className="text-center text-gray-400">Loading...</p>
+                <p className="text-center text-gray-400">Loading!!!</p>
               ) : followersList.length === 0 ? (
                 <p className="text-center text-gray-400">No followers yet</p>
               ) : (

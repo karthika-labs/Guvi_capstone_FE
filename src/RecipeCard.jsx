@@ -340,14 +340,14 @@ export default function RecipeCard({ recipes: propRecipes }) {
 
   if (recipes.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 righteous-regular">
         <p className="text-gray-400 text-lg">No recipes found</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  lg:grid-cols-4 gap-8 px-4 justify-center">
+    <div className="grid grid-cols-1 righteous-regular sm:grid-cols-2 md:grid-cols-3  lg:grid-cols-4 gap-8 px-4 justify-center">
       {recipes
         .filter(r => r && r._id)
         .map(recipe => (

@@ -25,7 +25,7 @@ export default function MealSelectorModal({
   });
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999]">
+    <div className="fixed   righteous-regular inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[999]">
       <div className="bg-[#111] w-full max-w-md p-5 rounded-2xl border border-gray-800 shadow-xl relative">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">

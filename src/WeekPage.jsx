@@ -26,10 +26,11 @@ export default function WeekPage() {
     setWeek(data);
   };
 
-  if (!week) return <div>Loading...</div>;
+  if (!week) return <div className="righteous-regular">Loading...</div>;
 
   return (
     <WeekPlannerGrid 
+    className="righteous-regular"
       week={week}
       onAction={handleUpdate}
     />

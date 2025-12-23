@@ -1,10 +1,22 @@
 import { X } from "lucide-react";
 
-const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = "Confirm", cancelText = "Cancel", confirmColor = "bg-red-600 hover:bg-red-700" }) => {
+const ConfirmModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+  confirmColor = "bg-red-600 hover:bg-red-700",
+}) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div
+      className="fixed righteous-regular inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
       <div
         className="bg-[#1a1a2e] rounded-xl w-full max-w-md border border-gray-700 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -41,4 +53,3 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
 };
 
 export default ConfirmModal;
-

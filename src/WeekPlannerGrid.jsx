@@ -6,7 +6,7 @@ const MealCell = ({ mealData, onSelect, onRemove }) => {
   const recipe = mealData?.recipeId;
 
   return (
-    <div className="relative cursor-pointer border border-gray-700 rounded-xl p-2 bg-[#1b1b1b] hover:bg-[#242424] transition-all duration-300 group h-28 flex flex-col items-center justify-center">
+    <div className="relative righteous-regular cursor-pointer border border-gray-700 rounded-xl p-2 bg-[#1b1b1b] hover:bg-[#242424] transition-all duration-300 group h-28 flex flex-col items-center justify-center">
       {recipe ? (
         <>
           <div className="relative">
@@ -48,7 +48,7 @@ const WeekPlannerGrid = ({ week, onSelectMeal }) => {
 
   if (!week)
     return (
-      <div className="grid grid-cols-3 gap-4 p-4">
+      <div className="grid grid-cols-3 gap-4 p-4 righteous-regular">
         {Array.from({ length: 9 }).map((_, idx) => (
           <div key={idx} className="bg-[#222] h-28 rounded-xl animate-pulse"></div>
         ))}
@@ -56,7 +56,7 @@ const WeekPlannerGrid = ({ week, onSelectMeal }) => {
     );
 
   return (
-    <div className="flex flex-col gap-2 w-full">
+    <div className="flex flex-col gap-2 w-full righteous-regular">
       {/* Header Row */}
       <div className="grid grid-cols-4 gap-2 text-center mb-2">
         <div></div>
@@ -67,7 +67,7 @@ const WeekPlannerGrid = ({ week, onSelectMeal }) => {
 
       {/* Day Rows */}
       {days.map((day) => (
-        <div key={day} className="grid grid-cols-4 gap-2 items-center mb-2">
+        <div key={day} className="grid righteous-regular grid-cols-4 gap-2 items-center mb-2">
           <div className="text-white font-medium">{day}</div>
           {meals.map((meal) => {
             const mealData = week?.plans?.[day.toLowerCase()]?.[meal];

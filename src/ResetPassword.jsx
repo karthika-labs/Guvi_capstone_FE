@@ -57,7 +57,7 @@ function ResetPassword() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br righteous-regular from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center justify-center p-4">
       <div className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/20">
         <h1 className="text-3xl font-bold text-center text-white mb-2">
           Reset Password

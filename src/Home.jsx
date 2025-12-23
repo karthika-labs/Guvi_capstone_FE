@@ -111,8 +111,8 @@ function Home() {
   }, [activeTab, searchResults.length]);
 
   return (
-    <div className="w-full bg-gradient-to-b from-[#0a0a0a] via-[#181818] to-[#0a0a0a] min-h-screen">
-      <div className="flex flex-col  w-full  mx-auto justify-center min-h-screen text-white space-y-3 ">
+    <div className="w-full righteous-regular bg-gradient-to-b from-[#0a0a0a] via-[#181818] to-[#0a0a0a] min-h-screen">
+      <div className="flex flex-col  w-full  mx-auto justify-center items-center min-h-screen text-white space-y-3 ">
         <header className="w-full sticky top-0 z-40 backdrop-blur-md bg-[#0a0a0a]/80 border-b border-purple-900/30 shadow-lg  px-4">
           <nav className="flex justify-between items-center py-4 px-8 md:px-8 mb-8">
             <Link
@@ -657,9 +657,8 @@ function Home() {
               </div>
             ) : (
               <>
-              
                 <RecipeCard recipes={displayRecipes} />
-             
+
                 {/* Pagination - Netflix Style */}
                 {allDisplayRecipes.length > recipesPerPage && (
                   <div className="flex justify-center items-center gap-4 mt-8 mb-4">

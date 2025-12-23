@@ -43,7 +43,7 @@ export default function WeekPlansDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#181818] to-[#1a1a2e] text-white">
+    <div className="min-h-screen  righteous-regular bg-gradient-to-br from-[#0f0f1a] via-[#181818] to-[#1a1a2e] text-white">
       <div className="max-w-7xl mx-auto p-6">
         {/* Back Button */}
         <button

@@ -29,7 +29,7 @@ export default function FavoritesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#0f0f1a] text-gray-200">
+    <div className=" righteous-regular min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#0f0f1a] text-gray-200">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Back Button */}
         <button

@@ -274,8 +274,8 @@ const RecipePage = () => {
 
   const copyToClipboard = () => {
     const url = window.location.href;
-   
-    const shareText =url
+
+    const shareText = url;
     navigator.clipboard.writeText(shareText).then(
       () => {
         setShareMessage("Link copied to clipboard!");
@@ -320,15 +320,18 @@ const RecipePage = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-black text-white min-h-screen flex justify-center items-center">
-        Loading...
+      <div className= "righteous-regular fixed inset-0 bg-black/70 flex flex-col justify-center items-center z-50">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-600 border-t-transparent"></div>
+        <p className="mt-4 text-purple-400 text-lg font-semibold">
+          loading... Please wait
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-black text-white min-h-screen flex justify-center items-center">
+      <div className="bg-black righteous-regular text-white min-h-screen flex justify-center items-center">
         Error: {error}
       </div>
     );
@@ -336,7 +339,7 @@ const RecipePage = () => {
 
   if (!recipe) {
     return (
-      <div className="bg-black text-white min-h-screen flex justify-center items-center">
+      <div className="bg-black righteous-regular text-white min-h-screen flex justify-center items-center">
         Recipe not found.
       </div>
     );
@@ -355,7 +358,7 @@ const RecipePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black  w-full  text-white font-sans">
+    <div className="min-h-screen bg-black righteous-regular w-full  text-white font-sans">
       {/* --- Top Half: Media --- */}
       <div className="relative w-full h-[50vh] bg-gray-900 ">
         <div className="absolute  inset-0 flex justify-center items-center  mt-8 ">
@@ -973,7 +976,7 @@ const RecipePage = () => {
         confirmColor="bg-red-600 hover:bg-red-700"
       />
 
- {/*  comment Delete Confirmation Modal */}
+      {/*  comment Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={showDeleteCommentModal}
         onClose={() => setShowDeleteCommentModal(false)}

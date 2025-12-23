@@ -238,8 +238,8 @@ const handleDownloadPDF = async () => {
     `,
   });
 
-  if (loading) return <p>Loading shopping list...</p>;
-  if (!list) return <p>No shopping list available.</p>;
+  if (loading) return <p className="righteous-regular">Loading shopping list...</p>;
+  if (!list) return <p className="righteous-regular">No shopping list available.</p>;
 
   // return (
   //   <div className="bg-[#111] p-4 rounded-xl shadow-md border border-gray-800 mt-4">
@@ -384,7 +384,7 @@ const handleDownloadPDF = async () => {
   // );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#181818] to-[#1a1a2e] text-white">
+    <div className="min-h-screen righteous-regular bg-gradient-to-br from-[#0f0f1a] via-[#181818] to-[#1a1a2e] text-white">
       <div className="max-w-6xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
