@@ -13,6 +13,7 @@ function Home() {
   const [activeTab, setActiveTab] = useState("all"); // "all" or "my"
   const [myRecipes, setMyRecipes] = useState([]);
   const [loadingMyRecipes, setLoadingMyRecipes] = useState(false);
+  const [searched, setSearched] = useState(false);
 
   const INITIAL_FILTERS = {
     searchText: "",
@@ -72,6 +73,7 @@ function Home() {
     }
 
     try {
+      setSearched(true);
       const data = await searchRecipes(params);
       setSearchResults(data);
       setSearchbar(false); // Close search page after search
@@ -105,7 +107,7 @@ function Home() {
 
   // Determine which recipes to display
   const allDisplayRecipes =
-    searchResults.length > 0
+    searched
       ? searchResults
       : activeTab === "my"
       ? myRecipes
@@ -562,6 +564,7 @@ function Home() {
                   onClick={() => {
                     setActiveTab("all");
                     setSearchResults([]);
+                    setSearched(false);
                   }}
                   className={`px-6 py-2.5 rounded-lg font-semibold transition-all ease-in-out duration-300 relative cursor-pointer ${
                     activeTab === "all"
@@ -579,6 +582,7 @@ function Home() {
                     onClick={() => {
                       setActiveTab("my");
                       setSearchResults([]);
+                      setSearched(false);
                     }}
                     className={`px-6 py-2.5 rounded-lg font-semibold transition-all ease-in-out duration-300 relative cursor-pointer ${
                       activeTab === "my"
@@ -649,7 +653,7 @@ function Home() {
                 <p className="text-gray-400 mb-6 max-w-md mx-auto">
                   {activeTab === "my"
                     ? "Start sharing your culinary creations with the community!"
-                    : searchResults.length > 0
+                    : searched && searchResults.length === 0
                     ? "Try adjusting your search filters"
                     : "Be the first to add a recipe!"}
                 </p>

@@ -244,6 +244,7 @@ const RecipePage = () => {
 
   // This function will now simply open the share modal.
   const handleShare = () => {
+    
     setShowShareModal(true);
   };
 
@@ -274,7 +275,7 @@ const RecipePage = () => {
 
   const copyToClipboard = () => {
     const url = window.location.href;
-
+  
     const shareText = url;
     navigator.clipboard.writeText(shareText).then(
       () => {
@@ -361,7 +362,7 @@ const RecipePage = () => {
     <div className="min-h-screen bg-black righteous-regular w-full  text-white font-sans">
       {/* --- Top Half: Media --- */}
       <div className="relative w-full h-[50vh] bg-gray-900 ">
-        <div className="absolute inset-0 flex justify-center items-center">
+        <div className="absolute inset-0">
           {videoUrl ? (
             <div className="w-full h-full">
               <iframe

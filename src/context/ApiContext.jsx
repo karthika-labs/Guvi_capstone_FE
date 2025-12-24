@@ -659,7 +659,6 @@ const updateProfile = async (data) => {
         },
       }
     );
-    setRecipes(res.data || []);
     console.log("Search results:", res.data);
     return res.data;
     }
