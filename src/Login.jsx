@@ -120,15 +120,31 @@ function Login() {
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 text-3xl md:text-4xl font-bold mb-2">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="w-10 h-10 text-[#A100FF]" 
-              fill="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            <span className="bg-gradient-to-r from-[#A100FF] via-purple-400 to-pink-400 bg-clip-text text-transparent">
+             <div
+                className="
+                    w-10 h-10
+                    rounded-full
+                    border-2 border-purple-600
+                    flex items-center justify-center
+                    overflow-hidden
+                    transition-all duration-300 ease-out
+                    hover:scale-110
+                    hover:border-purple-400
+                    hover:shadow-[0_0_12px_rgba(168,85,247,0.6)]
+                    cursor-pointer
+                  "
+              >
+                <img
+                  src="/recipelogo.webp"
+                  alt="Recipe Logo"
+                  className="w-full h-full object-cover"
+                ></img>
+              </div>
+            <span
+            
+            className="cursor-pointer bg-gradient-to-r from-[#A100FF] via-purple-400 to-pink-400 bg-clip-text text-transparent transition-all duration-300 ease-out
+                    hover:scale-110
+                    hover:border-purple-400">
               Recipe<span className="text-[#A100FF]">&lt;</span>Hub
             </span>
           </div>

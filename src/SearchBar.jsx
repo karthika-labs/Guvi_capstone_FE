@@ -11,8 +11,9 @@ function SearchBar({ handleSearch }) {
       if (!values.search) error.search = "required";
       return error;
     },
-    onSubmit: (values) => {
+    onSubmit: (values, { resetForm }) => {
       handleSearch(values.search);
+       resetForm();
     },
   });
 

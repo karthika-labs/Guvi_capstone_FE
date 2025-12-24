@@ -1,10 +1,11 @@
 import { useContext, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaShareAlt } from "react-icons/fa";
 import RecipeCard from "./RecipeCard";
 import ApiContext from "./context/ApiContext";
 
 function Home() {
+  const navigate = useNavigate();
   const [searchbar, setSearchbar] = useState(false);
   const { favoritesCount, user, searchRecipes, recipes, getUserRecipes } =
     useContext(ApiContext);
@@ -12,6 +13,14 @@ function Home() {
   const [activeTab, setActiveTab] = useState("all"); // "all" or "my"
   const [myRecipes, setMyRecipes] = useState([]);
   const [loadingMyRecipes, setLoadingMyRecipes] = useState(false);
+
+  const INITIAL_FILTERS = {
+    searchText: "",
+    mealType: "",
+    foodPreference: "",
+  };
+
+  
 
   const [filters, setFilters] = useState({
     searchText: "",
@@ -66,6 +75,9 @@ function Home() {
       const data = await searchRecipes(params);
       setSearchResults(data);
       setSearchbar(false); // Close search page after search
+
+      //  reset after search
+      setFilters(INITIAL_FILTERS);
     } catch (err) {
       console.error(err);
     } finally {
@@ -113,11 +125,11 @@ function Home() {
   return (
     <div className="w-full righteous-regular bg-gradient-to-b from-[#0a0a0a] via-[#181818] to-[#0a0a0a] min-h-screen">
       <div className="flex flex-col  w-full  mx-auto justify-center items-center min-h-screen text-white space-y-3 ">
-        <header className="w-full sticky top-0 z-40 backdrop-blur-md bg-[#0a0a0a]/80 border-b border-purple-900/30 shadow-lg  px-4">
-          <nav className="flex justify-between items-center py-4 px-8 md:px-8 mb-8">
+        <header className="w-full sticky top-0 z-40 backdrop-blur-md bg-[#0a0a0a]/80 border-b border-purple-900/30 shadow-lg  px-2  py-4">
+          <nav className="flex justify-between items-center py-2 px-2  md:px-8 mb-4 gap-2 md:gap-4 lg:gap-4">
             <Link
               to="/recipes"
-              className="flex items-center gap-2 text-2xl md:text-3xl font-bold text-[#A100FF] cursor-pointer hover:text-purple-400 transition-all ease-in-out duration-300"
+              className="flex items-center justify-start gap-2 text-xl md:text-3xl font-bold text-[#A100FF] cursor-pointer hover:text-purple-400 transition-all ease-in-out duration-300"
             >
               {/* Logo Icon */}
               {/* <svg 
@@ -130,17 +142,17 @@ function Home() {
               </svg> */}
               <div
                 className="
-    w-10 h-10
-    rounded-full
-    border-2 border-purple-600
-    flex items-center justify-center
-    overflow-hidden
-    transition-all duration-300 ease-out
-    hover:scale-110
-    hover:border-purple-400
-    hover:shadow-[0_0_12px_rgba(168,85,247,0.6)]
-    cursor-pointer
-  "
+                    w-10 h-10
+                    rounded-full
+                    border-2 border-purple-600
+                    flex items-center justify-center
+                    overflow-hidden
+                    transition-all duration-300 ease-out
+                    hover:scale-110
+                    hover:border-purple-400
+                    hover:shadow-[0_0_12px_rgba(168,85,247,0.6)]
+                    cursor-pointer
+                  "
               >
                 <img
                   src="/recipelogo.webp"
@@ -150,8 +162,8 @@ function Home() {
               </div>
               <span
                 className="  transition-all duration-300 ease-out
-    hover:scale-110
-    hover:border-purple-400 bg-gradient-to-r from-[#A100FF] via-purple-400 to-pink-400 bg-clip-text text-transparent"
+                    hover:scale-110
+                    hover:border-purple-400 bg-gradient-to-r from-[#A100FF] via-purple-400 to-pink-400 bg-clip-text text-transparent"
               >
                 Recipe<span className="text-[#A100FF]">&lt;</span>Hub
               </span>
@@ -246,9 +258,9 @@ function Home() {
                   </Link>
                 </>
               )}
-              <div className="flex justify-center items-center relative gap-2 md:gap-4">
+              <div className="flex justify-center items-center relative  md:gap-4">
                 <Link
-                  to="/favorites"
+                  to={user ? "/favorites" : "/login"}
                   className="relative p-2 rounded-lg hover:bg-purple-900/30 transition-all ease-in-out duration-300 group cursor-pointer"
                   title="Favorites"
                 >
@@ -273,7 +285,13 @@ function Home() {
                   )}
                 </Link>
                 <button
-                  onClick={() => setSearchbar((prev) => !prev)}
+                  onClick={() => {
+                    if (!user) {
+                      navigate("/login");
+                      return;
+                    }
+                    setSearchbar((prev) => !prev);
+                  }}
                   className="p-2 rounded-lg hover:bg-purple-900/30 transition-all ease-in-out duration-300 group cursor-pointer"
                   title="Toggle Search"
                 >
@@ -343,7 +361,7 @@ function Home() {
           </nav>
         </header>
 
-        <section className="relative flex flex-col items-center px-4 text-center py-12 md:py-16 overflow-hidden  p-4">
+        <section className="relative flex flex-col items-center px-4 text-center py-12 md:py-16 overflow-hidden ">
           {/* Animated Background Gradient with particles effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-pink-900/20 to-transparent"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(161,0,255,0.1),transparent_50%)] animate-pulse"></div>
@@ -357,20 +375,20 @@ function Home() {
 
           {/* Helper Stanza with individual line animations */}
           <div className="text-base md:text-lg lg:text-xl mb-10 text-center max-w-3xl text-gray-300 leading-relaxed relative z-10 space-y-3">
-            <p className="block animate-text-fade-in-1 transform hover:scale-105 transition-transform duration-300">
+            <p className="block animate-text-fade-in-1 transform md:hover:scale-105 transition-transform duration-300">
               🍳 Discover culinary treasures from every corner of the globe
             </p>
-            <p className="block animate-text-fade-in-2 transform hover:scale-105 transition-transform duration-300">
+            <p className="block animate-text-fade-in-2 transform md:hover:scale-105 transition-transform duration-300">
               👨‍🍳 Share your kitchen masterpieces with a vibrant community
             </p>
-            <p className="block animate-text-fade-in-3 transform hover:scale-105 transition-transform duration-300">
+            <p className="block animate-text-fade-in-3 transform md:hover:scale-105 transition-transform duration-300">
               ✨ Plan your meals, create shopping lists, and transform your
               cooking journey
             </p>
           </div>
 
           {/* Modern Hero Image - Matches Featured Recipes Container Width */}
-          <div className="w-full px-4 max-w-6xl">
+          <div className="w-full max-w-6xl mx-auto px-2 sm:px-4">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl group cursor-pointer w-full border-2 border-purple-900/30">
               {/* Gradient overlay on hover */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></div>
@@ -400,7 +418,10 @@ function Home() {
               {/* Close Button */}
               <button
                 className="absolute top-6 right-6 bg-[#A100FF] hover:bg-purple-700 text-white p-3 rounded-full transition-all ease-in-out duration-300 hover:scale-110 shadow-lg z-10 cursor-pointer"
-                onClick={() => setSearchbar(false)}
+                onClick={() => {
+                  setSearchbar(false);
+                  setFilters(INITIAL_FILTERS);
+                }}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

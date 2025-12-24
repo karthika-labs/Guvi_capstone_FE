@@ -240,3 +240,7 @@
   font-weight: 400;
   font-style: normal;
 }
+
+body {
+  overflow-x: hidden;
+}
