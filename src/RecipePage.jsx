@@ -361,16 +361,16 @@ const RecipePage = () => {
     <div className="min-h-screen bg-black righteous-regular w-full  text-white font-sans">
       {/* --- Top Half: Media --- */}
       <div className="relative w-full h-[50vh] bg-gray-900 ">
-        <div className="absolute  inset-0 flex justify-center items-center  mt-8 ">
+        <div className="absolute inset-0 flex justify-center items-center">
           {videoUrl ? (
-            <div className="w-full h-full aspect-video ">
+            <div className="w-full h-full">
               <iframe
                 src={`${
                   videoUrl.includes("embed")
                     ? videoUrl
                     : videoUrl.replace("watch?v=", "embed/")
                 }?autoplay=0&controls=1&modestbranding=1&rel=0`}
-                className="w-full h-full "
+                className="w-full h-full"
                 frameBorder="0"
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -557,9 +557,31 @@ const RecipePage = () => {
           <h1 className="text-4xl md:text-6xl font-extrabold mb-4 text-white">
             {recipe.recipeName}
           </h1>
-          <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-4">
             {recipe.description}
           </p>
+          {/* Food Preference and Meal Types */}
+          <div className="flex flex-wrap justify-center items-center gap-3 mt-4">
+            {recipe.foodPreference && (
+              <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                recipe.foodPreference === "Veg" 
+                  ? "bg-green-600 text-white" 
+                  : "bg-red-600 text-white"
+              }`}>
+                {recipe.foodPreference}
+              </span>
+            )}
+            {recipe.mealType && Array.isArray(recipe.mealType) && recipe.mealType.length > 0 && (
+              recipe.mealType.map((meal, index) => (
+                <span
+                  key={index}
+                  className="px-4 py-2 rounded-full text-sm font-semibold bg-purple-600 text-white"
+                >
+                  {meal}
+                </span>
+              ))
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">

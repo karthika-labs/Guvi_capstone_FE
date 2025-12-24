@@ -549,9 +549,9 @@ const updateProfile = async (data) => {
   const getRecipeById = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`${API_BASE_URL}/recipes/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Make Authorization header optional - allows viewing recipes without login
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await axios.get(`${API_BASE_URL}/recipes/${id}`, { headers });
       console.log("single Recipe fetched successfully:", res.data.recipe);
       return res.data.recipe;
     } catch (err) {
