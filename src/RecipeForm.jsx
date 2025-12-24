@@ -28,9 +28,13 @@ function RecipeForm() {
           });
           const recipe = res.data.recipe;
           setInitialRecipe(recipe);
-          
+
           // Set existing photos and video
-          if (recipe.photoUrl && Array.isArray(recipe.photoUrl) && recipe.photoUrl.length > 0) {
+          if (
+            recipe.photoUrl &&
+            Array.isArray(recipe.photoUrl) &&
+            recipe.photoUrl.length > 0
+          ) {
             setExistingPhotos(recipe.photoUrl);
           }
           if (recipe.videoUrl) {
@@ -54,9 +58,10 @@ function RecipeForm() {
       timeDuration: initialRecipe?.timeDuration || "",
       mealType: initialRecipe?.mealType || [],
       foodPreference: initialRecipe?.foodPreference || "",
-      ingredients: initialRecipe?.ingredients && initialRecipe.ingredients.length > 0
-        ? initialRecipe.ingredients
-        : [{ name: "", quantity: "", unit: "" }],
+      ingredients:
+        initialRecipe?.ingredients && initialRecipe.ingredients.length > 0
+          ? initialRecipe.ingredients
+          : [{ name: "", quantity: "", unit: "" }],
       instructions: initialRecipe?.instructions || "",
       description: initialRecipe?.description || "",
     },
@@ -79,8 +84,12 @@ function RecipeForm() {
       if (!values.foodPreference) {
         errors.foodPreference = "Food Preference is Required";
       }
-      if (!values.ingredients || values.ingredients.length === 0) {
-        errors.ingredients = "At least one ingredient is required";
+      const hasAtLeastOneIngredient = values.ingredients.some(
+        (ing) => ing.name && ing.name.trim() !== ""
+      );
+
+      if (!hasAtLeastOneIngredient) {
+        errors.ingredients = "Please add at least one ingredient";
       }
 
       return errors;
@@ -97,13 +106,16 @@ function RecipeForm() {
 
         data.append("file", file);
         data.append("upload_preset", "guvi_project_recipe_upload");
-
-        const res = await axios.post(
-          "https://api.cloudinary.com/v1_1/duwrhno5o/image/upload",
-          data
-        );
-
-        uploadedUrls.push(res.data.secure_url);
+        try {
+          const res = await axios.post(
+            "https://api.cloudinary.com/v1_1/duwrhno5o/image/upload",
+            data
+          );
+          uploadedUrls.push(res.data.secure_url);
+          console.log("Photo upload response:", res.data);
+        } catch (err) {
+          console.log("Error uploading photo:", err);
+        }
       }
 
       // Upload video
@@ -114,13 +126,16 @@ function RecipeForm() {
 
         vdata.append("file", selectedVideo);
         vdata.append("upload_preset", "guvi_project_recipe_upload");
-
-        const vres = await axios.post(
-          "https://api.cloudinary.com/v1_1/duwrhno5o/video/upload",
-          vdata
-        );
-
-        videoUrl = vres.data.secure_url;
+        try {
+          const vres = await axios.post(
+            "https://api.cloudinary.com/v1_1/duwrhno5o/video/upload",
+            vdata
+          );
+          videoUrl = vres.data.secure_url;
+          console.log("Video upload response:", vres.data);
+        } catch (err) {
+          console.log("Error uploading video:", err);
+        }
       }
 
       // Combine existing and new photos/videos
@@ -131,34 +146,36 @@ function RecipeForm() {
       try {
         if (isEditMode) {
           // Update existing recipe
-          const res = await axios.put(`${API_BASE_URL}/recipes/${recipeId}`, values, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          });
+          const res = await axios.put(
+            `${API_BASE_URL}/recipes/${recipeId}`,
+            values,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          console.log("Recipe updated successfully:", res.data);
           setToast(true);
           setTimeout(() => {
             navigate(`/recipe/${recipeId}`);
             setToast(false);
           }, 1500);
-        } 
-        else {
+        } else {
           // Create new recipe
           const res = await axios.post(`${API_BASE_URL}/recipes`, values, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           });
+          console.log("Recipe submitted successfully:", res.data);
           setToast(true);
           setTimeout(() => {
             navigate("/recipes");
             setToast(false);
           }, 500);
         }
-
-        console.log("Recipe submitted successfully:", res.data);
-      } 
-      catch (e) {
+      } catch (e) {
         if (e.response && e.response.status === 400) {
           setErrorMessage(e.response.data.message);
         } else {
@@ -233,7 +250,9 @@ function RecipeForm() {
 
       {toast && (
         <div className="fixed top-5 right-4 bg-green-500 text-white px-4 py-2 rounded shadow z-50">
-          {isEditMode ? "Recipe Updated Successfully!" : "Recipe Submitted Successfully!"}
+          {isEditMode
+            ? "Recipe Updated Successfully!"
+            : "Recipe Submitted Successfully!"}
         </div>
       )}
       {errorMessage && (
@@ -389,13 +408,13 @@ function RecipeForm() {
                 <div className="flex justify-between items-center bg-[#1a1a1a] p-2 rounded-md">
                   <div className="flex items-center gap-2">
                     <span className="text-green-400">Existing:</span>
-                    <a 
-                      href={existingVideo} 
-                      target="_blank" 
+                    <a
+                      href={existingVideo}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-400 hover:underline truncate max-w-xs"
                     >
-                      {existingVideo.split('/').pop() || 'Video'}
+                      {existingVideo.split("/").pop() || "Video"}
                     </a>
                   </div>
                   <button
@@ -422,9 +441,7 @@ function RecipeForm() {
                   </button>
                 </div>
               )}
-              {!existingVideo && !selectedVideo && (
-                <p>No video selected</p>
-              )}
+              {!existingVideo && !selectedVideo && <p>No video selected</p>}
             </div>
           </div>
 
@@ -448,54 +465,56 @@ function RecipeForm() {
 
             {/* Show existing and selected photos */}
             <div className="mt-2 space-y-2 text-sm">
-              {existingPhotos.length > 0 && existingPhotos.map((photoUrl, index) => (
-                <div
-                  key={`existing-${index}`}
-                  className="flex justify-between items-center bg-[#1a1a1a] p-2 rounded-md"
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="text-green-400">Existing:</span>
-                    <img 
-                      src={photoUrl} 
-                      alt={`Existing ${index + 1}`}
-                      className="w-10 h-10 object-cover rounded"
-                    />
-                    <a 
-                      href={photoUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:underline truncate"
+              {existingPhotos.length > 0 &&
+                existingPhotos.map((photoUrl, index) => (
+                  <div
+                    key={`existing-${index}`}
+                    className="flex justify-between items-center bg-[#1a1a1a] p-2 rounded-md"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <span className="text-green-400">Existing:</span>
+                      <img
+                        src={photoUrl}
+                        alt={`Existing ${index + 1}`}
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                      <a
+                        href={photoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:underline truncate"
+                      >
+                        Photo {index + 1}
+                      </a>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index, true)}
+                      className="text-red-500 hover:text-red-400 font-bold ml-2"
                     >
-                      Photo {index + 1}
-                    </a>
+                      ✕
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(index, true)}
-                    className="text-red-500 hover:text-red-400 font-bold ml-2"
+                ))}
+              {selectedPhotos.length > 0 &&
+                selectedPhotos.map((file, index) => (
+                  <div
+                    key={`new-${index}`}
+                    className="flex justify-between items-center bg-[#1a1a1a] p-2 rounded-md"
                   >
-                    ✕
-                  </button>
-                </div>
-              ))}
-              {selectedPhotos.length > 0 && selectedPhotos.map((file, index) => (
-                <div
-                  key={`new-${index}`}
-                  className="flex justify-between items-center bg-[#1a1a1a] p-2 rounded-md"
-                >
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="text-purple-400">New:</span>
-                    <span className="truncate">{file.name}</span>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <span className="text-purple-400">New:</span>
+                      <span className="truncate">{file.name}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index, false)}
+                      className="text-red-500 hover:text-red-400 font-bold ml-2"
+                    >
+                      ✕
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(index, false)}
-                    className="text-red-500 hover:text-red-400 font-bold ml-2"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
+                ))}
               {existingPhotos.length === 0 && selectedPhotos.length === 0 && (
                 <p>No photos selected</p>
               )}
@@ -506,6 +525,11 @@ function RecipeForm() {
         {/* Ingredients */}
         <div>
           <h2 className="text-lg font-semibold mt-4 mb-2">Ingredients</h2>
+          {formik.errors.ingredients && (
+            <p className="text-red-500 text-sm mt-1">
+              {formik.errors.ingredients}
+            </p>
+          )}
           {formik.values.ingredients.map((ingredient, index) => (
             <div
               key={index}
