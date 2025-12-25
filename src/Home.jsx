@@ -1,6 +1,6 @@
 import { useContext, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaShareAlt } from "react-icons/fa";
+import { FaShareAlt, FaTimes } from "react-icons/fa";
 import RecipeCard from "./RecipeCard";
 import ApiContext from "./context/ApiContext";
 
@@ -33,6 +33,15 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const recipesPerPage = 12;
+  const [searchQuery, setSearchQuery] = useState(""); // Store the search query text
+
+  // Function to clear search and return to all recipes
+  const clearSearch = () => {
+    setSearchResults([]);
+    setSearched(false);
+    setSearchQuery("");
+    setCurrentPage(1);
+  };
 
   // const handleSearch = async () => {
   //   console.log("call seacrch ");
@@ -75,6 +84,8 @@ function Home() {
     try {
       setSearched(true);
       const data = await searchRecipes(params);
+      // Store the search query text for display
+      setSearchQuery(filters.searchText?.trim() || "");
       setSearchResults(data);
       setSearchbar(false); // Close search page after search
 
@@ -106,12 +117,23 @@ function Home() {
   }, [activeTab, user?._id, getUserRecipes]);
 
   // Determine which recipes to display
-  const allDisplayRecipes =
-    searched
-      ? searchResults
-      : activeTab === "my"
-      ? myRecipes
-      : recipes;
+  // If searched, filter results based on active tab (even if empty)
+  let allDisplayRecipes;
+  if (searched) {
+    // Filter search results based on active tab
+    if (activeTab === "my" && user?._id) {
+      // Filter to show only user's recipes from search results
+      allDisplayRecipes = searchResults.filter(recipe => 
+        String(recipe.userId?._id || recipe.userId) === String(user._id)
+      );
+    } else {
+      // Show all search results for "All Recipes" tab
+      allDisplayRecipes = searchResults;
+    }
+  } else {
+    // No search active, show tab-specific recipes
+    allDisplayRecipes = activeTab === "my" ? myRecipes : recipes;
+  }
 
   // Pagination logic
   const totalPages = Math.ceil(allDisplayRecipes.length / recipesPerPage);
@@ -119,10 +141,16 @@ function Home() {
   const endIndex = startIndex + recipesPerPage;
   const displayRecipes = allDisplayRecipes.slice(startIndex, endIndex);
 
-  // Reset to page 1 when switching tabs or search results change
+  // Reset to page 1 when search results change or when switching tabs (only if not in search mode)
+  useEffect(() => {
+    if (!searched) {
+      setCurrentPage(1);
+    }
+  }, [activeTab]);
+  
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeTab, searchResults.length]);
+  }, [searchResults.length]);
 
   return (
     <div className="w-full righteous-regular bg-gradient-to-b from-[#0a0a0a] via-[#181818] to-[#0a0a0a] min-h-screen">
@@ -563,8 +591,8 @@ function Home() {
                 <button
                   onClick={() => {
                     setActiveTab("all");
-                    setSearchResults([]);
-                    setSearched(false);
+                    // Don't clear search results when switching tabs - keep search active
+                    // Search will be filtered based on active tab
                   }}
                   className={`px-6 py-2.5 rounded-lg font-semibold transition-all ease-in-out duration-300 relative cursor-pointer ${
                     activeTab === "all"
@@ -581,8 +609,8 @@ function Home() {
                   <button
                     onClick={() => {
                       setActiveTab("my");
-                      setSearchResults([]);
-                      setSearched(false);
+                      // Don't clear search results when switching tabs - keep search active
+                      // Search will be filtered based on active tab
                     }}
                     className={`px-6 py-2.5 rounded-lg font-semibold transition-all ease-in-out duration-300 relative cursor-pointer ${
                       activeTab === "my"
@@ -599,15 +627,38 @@ function Home() {
               </div>
 
               {/* Enhanced Section Title */}
-              <div className="text-center">
-                <h2 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                  {activeTab === "my" ? "My Recipes" : "Featured Recipes"}
-                </h2>
-                <p className="text-gray-400 text-sm md:text-base">
-                  {activeTab === "my"
-                    ? "Recipes you've created and shared"
-                    : "Discover amazing recipes from our community"}
-                </p>
+              <div className={searched && searchQuery ? "text-left" : "text-center"}>
+                {searched && searchQuery ? (
+                  <>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                      Search Results
+                    </h2>
+                    <div className="flex items-center gap-3">
+                      <p className="text-gray-400 text-sm md:text-base">
+                        Showing Results for <span className="text-purple-400 font-semibold">"{searchQuery}"</span>
+                      </p>
+                      <button
+                        onClick={clearSearch}
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white transition-all duration-300 hover:scale-110 cursor-pointer"
+                        title="Clear search and show all recipes"
+                        aria-label="Clear search"
+                      >
+                        <FaTimes className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                      {activeTab === "my" ? "My Recipes" : "Featured Recipes"}
+                    </h2>
+                    <p className="text-gray-400 text-sm md:text-base">
+                      {activeTab === "my"
+                        ? "Recipes you've created and shared"
+                        : "Discover amazing recipes from our community"}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
             {loadingMyRecipes ? (
@@ -676,7 +727,7 @@ function Home() {
                         d="M12 4v16m8-8H4"
                       />
                     </svg>
-                    Create Your First Recipe
+                    Create Recipe
                   </Link>
                 )}
               </div>

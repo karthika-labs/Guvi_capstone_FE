@@ -873,18 +873,22 @@ const RecipePage = () => {
                                   <div className="flex gap-2">
                                     <button
                                       onClick={() => handleEditComment(comment)}
-                                      className="text-s text-blue-400 hover:text-blue-300 transition  cursor-pointer hover:bg-blue-400/20 px-2 py-1 rounded"
+                                      className="flex items-center justify-center w-8 h-8 text-blue-400 hover:text-blue-300 transition cursor-pointer hover:bg-blue-400/20 rounded-full"
                                       disabled={isSubmitting}
+                                      title="Edit comment"
+                                      aria-label="Edit comment"
                                     >
-                                      Edit
+                                      <FaEdit className="w-4 h-4" />
                                     </button>
                                     <button
                                       onClick={() =>
                                         openDeleteCommentModal(comment._id)
                                       }
-                                      className="text-red-500 hover:text-red-300 text-s cursor-pointer  transition hover:bg-red-400/20 px-2 py-1 rounded"
+                                      className="flex items-center justify-center w-8 h-8 text-red-500 hover:text-red-300 transition cursor-pointer hover:bg-red-400/20 rounded-full"
+                                      title="Delete comment"
+                                      aria-label="Delete comment"
                                     >
-                                      Delete
+                                      <FaTrash className="w-4 h-4" />
                                     </button>
                                   </div>
                                 )}

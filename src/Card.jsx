@@ -31,11 +31,11 @@ const formatDate = (iso) =>
 const getRatingColor = (rating) => {
   const numRating = parseFloat(rating) || 0;
   if (numRating < 2) {
-    return "text-red-500"; // Below 3: Red
-  } else if (numRating >= 3 || numRating < 4) {
-    return "text-yellow-400"; // Equal to or above 3 and below 4: Yellow
-  } else if (numRating >= 4 || numRating <= 5) {
-    return "text-green-400"; // Equal to or above 4 and below/equal to 5: Green
+    return "text-red-500"; // Below 2: Red
+  } else if (numRating >= 2 && numRating < 4) {
+    return "text-yellow-400"; // Equal to or above 2 and below 4: Yellow
+  } else if (numRating >= 4) {
+    return "text-green-400"; // Equal to or above 4: Green
   }
   return "text-gray-400"; // Default fallback
 };
