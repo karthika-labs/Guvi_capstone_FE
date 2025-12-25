@@ -46,7 +46,7 @@ Before you begin, ensure you have the following installed:
 - **npm** or **yarn**
 - **Backend API** running (see Backend README)
 
-## 🛠️ Installation
+## Installation
 
 1. **Navigate to the frontend directory**
    ```bash
@@ -64,7 +64,7 @@ Before you begin, ensure you have the following installed:
    ```
    Replace with your backend API URL if different.
 
-## 🏃 Running the Application
+## Running the Application
 
 ### Development Mode
 ```bash
@@ -226,7 +226,7 @@ This will start the Vite development server, typically at `http://localhost:5173
      - Use native share (mobile devices)
    - Recipe links are accessible without login
 
-## 🎨 Technologies Used
+## Technologies Used
 
 ### Core
 - **React 19.2.0**: UI library
@@ -329,25 +329,6 @@ The application is fully responsive with breakpoints for:
 - Mobile devices
 - Tablets
 - Desktop screens
-
-## Troubleshooting
-
-1. **API connection failed**
-   - Check if backend server is running
-   - Verify `VITE_BACKEND_API_BASE_URL` in `.env`
-   - Check browser console for CORS errors
-
-2. **Build errors**
-   - Clear `node_modules` and reinstall: `rm -rf node_modules && npm install`
-   - Check Node.js version compatibility
-
-3. **Styling issues**
-   - Ensure Tailwind CSS is properly configured
-   - Check if `@tailwindcss/vite` plugin is in `vite.config.js`
-
-4. **Authentication issues**
-   - Clear localStorage and try logging in again
-   - Check if JWT token is being sent in API requests
 
 
 
