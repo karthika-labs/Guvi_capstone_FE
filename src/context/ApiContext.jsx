@@ -52,9 +52,8 @@ export const ApiProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setUser(res.data);
-      console.log("User fetched successfully:", res.data);
     } catch (err) {
-      console.log("Error fetching user:", err);
+      console.error("Error fetching user:", err);
     }
   };
 
@@ -104,7 +103,6 @@ const updateProfile = async (data) => {
 
     setUser(res.data); // IMPORTANT: update context user immediately
     toast.success("Profile updated");
-    console.log("user data updated", res.data);
     return res.data;
   } catch (err) {
     console.error(
@@ -128,9 +126,8 @@ const updateProfile = async (data) => {
         },
       });
       setRecipes(res.data.recipe);
-      console.log("Recipes fetched successfully", res.data.recipe);
     } catch (e) {
-      console.log("Error while fetching recipes:", e.message);
+      console.error("Error while fetching recipes:", e.message);
     }
   };
 
@@ -143,7 +140,7 @@ const updateProfile = async (data) => {
       });
       return res.data.recipeList || [];
     } catch (e) {
-      console.log("Error while fetching user recipes:", e.message);
+      console.error("Error while fetching user recipes:", e.message);
       return [];
     }
   };
@@ -160,16 +157,14 @@ const updateProfile = async (data) => {
       );
       setFavorites(res.data.favoriteByUser || []);
       setFavoritesCount(res.data.favoriteByUser.length); // store count
-      console.log("Favorites fetched successfully:", res.data);
     } catch (err) {
-      console.log("Error fetching favorites:", err);
+      console.error("Error fetching favorites:", err);
     }
   };
 
   // Toggle favorite
   const toggleFavorite = async (recipeId) => {
     const isAlreadyFavorite = isFavorite(recipeId);
-    console.log("Already favorite:", isAlreadyFavorite);
 
     try {
       if (isAlreadyFavorite) {
@@ -179,7 +174,6 @@ const updateProfile = async (data) => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-        console.log("Deleted favorite successfully");
         toast.info("Removed from favorites");
       } else {
         // POST
@@ -192,14 +186,13 @@ const updateProfile = async (data) => {
             },
           }
         );
-        console.log("Added favorite successfully");
         toast.success("Added to favorites");
       }
 
       // Re-fetch to ensure UI is in sync with the database
       await fetchFavorites();
     } catch (err) {
-      console.log("Error toggling favorite:", err);
+      console.error("Error toggling favorite:", err);
       toast.error("Could not update favorites.");
     }
   };
@@ -219,7 +212,6 @@ const updateProfile = async (data) => {
       });
       // backend returns { getPlan: [...] }
       setWeekPlans(res.data.getPlan || []);
-      console.log("Week plans fetched:", res.data.getPlan);
     } catch (err) {
       console.error(
         "Error fetching week plans:",
@@ -240,7 +232,6 @@ const updateProfile = async (data) => {
 
       // Only update state if creation was successful
       setWeekPlans((prev) => [newPlan, ...prev]);
-      console.log("API response for createWeekPlan:", res.data);
       return newPlan;
     } catch (err) {
       const msg = err?.response?.data?.message;
@@ -265,7 +256,6 @@ const updateProfile = async (data) => {
       });
       // backend returns { getOnePlan: {...} }
       setCurrentWeek(res.data.getOnePlan || null);
-      console.log("Fetched week detail:", res.data.getOnePlan);
       return res.data.getOnePlan;
     } catch (err) {
       console.error(
@@ -356,7 +346,6 @@ const updateProfile = async (data) => {
       );
       // server returns { shoppingList: {...} }
       setShoppingList(res.data.shoppingList || null);
-      console.log("Shopping list created:", res.data.shoppingList);
       return res.data.shoppingList;
     } catch (err) {
       console.error(
@@ -377,7 +366,6 @@ const updateProfile = async (data) => {
         }
       );
       setShoppingList(res.data.allList || null);
-      console.log("fetched list", res.data.allList);
       return res.data.allList;
     } catch (err) {
       console.error(
@@ -424,7 +412,6 @@ const updateProfile = async (data) => {
         }
       );
       setShoppingList(res.data.updated || res.data.allList || shoppingList);
-      console.log("updated list", res.data.updated);
       return res.data.updated || res.data;
     } catch (err) {
       console.error(
@@ -552,7 +539,6 @@ const updateProfile = async (data) => {
       // Make Authorization header optional - allows viewing recipes without login
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const res = await axios.get(`${API_BASE_URL}/recipes/${id}`, { headers });
-      console.log("single Recipe fetched successfully:", res.data.recipe);
       return res.data.recipe;
     } catch (err) {
       console.error("Error fetching recipe by id:", err);
@@ -659,7 +645,6 @@ const updateProfile = async (data) => {
         },
       }
     );
-    console.log("Search results:", res.data);
     return res.data;
     }
     catch(err){

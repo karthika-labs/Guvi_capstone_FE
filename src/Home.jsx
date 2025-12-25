@@ -65,8 +65,6 @@ function Home() {
   //   setLoading(false);
   // };
   const handleSearch = async () => {
-    console.log("CALL SEARCH");
-
     setLoading(true);
 
     const params = {};

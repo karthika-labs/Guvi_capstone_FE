@@ -73,9 +73,7 @@ export default function WeekPlannerPage() {
       setError(null);
 
       try {
-        console.log("Loading week with id:", id);
         const week = await fetchWeekById(id);
-        console.log("Fetched week data:", week);
 
         if (!week) {
           console.error("Week not found");
@@ -89,7 +87,6 @@ export default function WeekPlannerPage() {
         // Build the 7 days - normalize to avoid timezone issues
         if (week.weekStartDate) {
           const startDateStr = String(week.weekStartDate).trim();
-          console.log("Parsing weekStartDate:", startDateStr);
 
           try {
             const dateParts = startDateStr.split("-");
@@ -126,7 +123,6 @@ export default function WeekPlannerPage() {
                   });
 
                   setWeekDays(days);
-                  console.log("Week days set:", days);
                 } else {
                   console.error("Invalid date object created");
                   setError("Invalid date in week plan");
@@ -180,9 +176,6 @@ export default function WeekPlannerPage() {
     });
     const currentWeekPlans = plansResponse.data.getPlan || [];
 
-    console.log("Checking for overlaps with weekPlans:", currentWeekPlans);
-    console.log("Selected date:", selectedDate);
-
     // Normalize date to avoid timezone issues - extract year, month, day
     const selected = new Date(selectedDate);
 
@@ -191,8 +184,6 @@ export default function WeekPlannerPage() {
       selected.getMonth(),
       selected.getDate()
     );
-
-    console.log("Normalized start date:", normalizedStartDate);
 
     //     const normalizedStartDate = new Date(
     //       selected.getFullYear(),
@@ -219,23 +210,13 @@ export default function WeekPlannerPage() {
     const newWeekEnd = new Date(newWeekStart);
     newWeekEnd.setDate(newWeekEnd.getDate() + 6);
 
-    console.log("New week date range:", {
-      start: newWeekStart.toISOString().split("T")[0],
-      end: newWeekEnd.toISOString().split("T")[0],
-    });
-
     if (
       currentWeekPlans &&
       Array.isArray(currentWeekPlans) &&
       currentWeekPlans.length > 0
     ) {
-      console.log(
-        `Checking ${currentWeekPlans.length} existing week plans for overlaps...`
-      );
-
       for (const week of currentWeekPlans) {
         if (!week || !week.weekStartDate) {
-          console.log("Skipping week - missing data:", week);
           continue;
         }
 
@@ -245,10 +226,6 @@ export default function WeekPlannerPage() {
           const dateParts = weekStartDateStr.split("-");
 
           if (dateParts.length !== 3) {
-            console.log(
-              "Skipping week - invalid date format:",
-              weekStartDateStr
-            );
             continue;
           }
 
@@ -261,11 +238,6 @@ export default function WeekPlannerPage() {
             isNaN(existingMonth) ||
             isNaN(existingDay)
           ) {
-            console.log("Skipping week - invalid date values:", {
-              existingYear,
-              existingMonth,
-              existingDay,
-            });
             continue;
           }
 
@@ -277,21 +249,11 @@ export default function WeekPlannerPage() {
 
           // Validate the date object
           if (isNaN(existingWeekStart.getTime())) {
-            console.log(
-              "Skipping week - invalid date object:",
-              existingWeekStart
-            );
             continue;
           }
 
           const existingWeekEnd = new Date(existingWeekStart);
           existingWeekEnd.setDate(existingWeekEnd.getDate() + 6);
-
-          console.log("Comparing with existing week:", {
-            id: week._id,
-            start: existingWeekStart.toISOString().split("T")[0],
-            end: existingWeekEnd.toISOString().split("T")[0],
-          });
 
           // Check if dates overlap using date range comparison
           const overlapCondition1 =
@@ -302,14 +264,7 @@ export default function WeekPlannerPage() {
           const overlapCondition3 =
             newWeekStart <= existingWeekStart && newWeekEnd >= existingWeekEnd;
 
-          console.log("Overlap conditions:", {
-            condition1: overlapCondition1,
-            condition2: overlapCondition2,
-            condition3: overlapCondition3,
-          });
-
           if (overlapCondition1 || overlapCondition2 || overlapCondition3) {
-            console.log("OVERLAP DETECTED!");
             overlappingWeek = {
               _id: week._id,
               weekStartDate: week.weekStartDate,
@@ -352,12 +307,9 @@ export default function WeekPlannerPage() {
         //         break; // Found first overlapping week
         // >>>>>>> Stashed changes
       }
-    } else {
-      console.log("No existing week plans to check against");
     }
 
     if (overlappingWeek) {
-      console.log("Overlap found! Showing modal with plan:", overlappingWeek);
       setOverlappingPlan(overlappingWeek);
       setShowOverlapModal(true);
       return;
@@ -385,8 +337,6 @@ export default function WeekPlannerPage() {
       //       );
       // >>>>>>> Stashed changes
     }
-
-    console.log("No overlap found, proceeding to create week plan");
 
     // Create new week
     try {
@@ -500,7 +450,6 @@ export default function WeekPlannerPage() {
       // Use updatedWeek._id to ensure we're using the latest data
       try {
         await createShoppingList(updatedWeek._id);
-        console.log("Shopping list regenerated after adding meal");
       } catch (err) {
         console.error("Error regenerating shopping list:", err);
         // Don't show error toast as this is a background operation
@@ -532,7 +481,6 @@ export default function WeekPlannerPage() {
       // Use updatedWeek._id to ensure we're using the latest data
       try {
         await createShoppingList(updatedWeek._id);
-        console.log("Shopping list regenerated after removing meal");
       } catch (err) {
         console.error("Error regenerating shopping list:", err);
         // Don't show error toast as this is a background operation

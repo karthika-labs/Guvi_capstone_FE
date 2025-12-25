@@ -112,9 +112,8 @@ function RecipeForm() {
             data
           );
           uploadedUrls.push(res.data.secure_url);
-          console.log("Photo upload response:", res.data);
         } catch (err) {
-          console.log("Error uploading photo:", err);
+          console.error("Error uploading photo:", err);
         }
       }
 
@@ -132,9 +131,8 @@ function RecipeForm() {
             vdata
           );
           videoUrl = vres.data.secure_url;
-          console.log("Video upload response:", vres.data);
         } catch (err) {
-          console.log("Error uploading video:", err);
+          console.error("Error uploading video:", err);
         }
       }
 
@@ -155,7 +153,6 @@ function RecipeForm() {
               },
             }
           );
-          console.log("Recipe updated successfully:", res.data);
           setToast(true);
           setTimeout(() => {
             navigate(`/recipe/${recipeId}`);
@@ -168,7 +165,6 @@ function RecipeForm() {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           });
-          console.log("Recipe submitted successfully:", res.data);
           setToast(true);
           setTimeout(() => {
             navigate("/recipes");
@@ -180,12 +176,10 @@ function RecipeForm() {
           setErrorMessage(e.response.data.message);
         } else {
           setErrorMessage("Something went wrong. Please try again later.");
-          console.log("error while registering", e.message);
+          console.error("error while submitting recipe", e.message);
         }
       }
       setLoading(false);
-
-      console.log("Final form values:", values);
     },
   });
 

@@ -45,7 +45,6 @@ function Register() {
         setTimeout(() => {
           navigate("/login");
         }, 1500);
-        console.log("user registered successfully", res.data);
       } catch (e) {
         if (e.response && e.response.status === 400) {
           setErrorMessage(e.response.data.message || "Registration failed. Please try again.");
@@ -53,7 +52,7 @@ function Register() {
         } else {
           setErrorMessage("Something went wrong. Please try again later.");
           toast.error("Something went wrong. Please try again later.");
-          console.log("error while registering", e.message);
+          console.error("error while registering", e.message);
         }
       } finally {
         setLoading(false);

@@ -87,7 +87,7 @@ export default function Card({ recipe }) {
       }
       getRecipe();
     } catch (err) {
-      console.log("Like error:", err.response?.data?.message);
+      console.error("Like error:", err.response?.data?.message);
     }
     setTimeout(() => setShowHeart(null), 600);
   };

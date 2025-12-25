@@ -57,7 +57,6 @@ export default function ShoppingListPage() {
   //   }
   // };
   const handleQuantityChange = async (index, delta) => {
-    console.log("enters");
     const newList = { ...list };
     newList.lists[index].quantity = Math.max(
       1,
@@ -66,7 +65,6 @@ export default function ShoppingListPage() {
     setList(newList);
     try {
       await updateShoppingList(id, listId, { lists: newList.lists });
-      console.log("comes");
     } catch (err) {
       console.error("Error updating quantity:", err);
     }
@@ -76,7 +74,6 @@ export default function ShoppingListPage() {
     try {
       const res = await removeIngredient(id, listId, itemName);
       setList(res.removed);
-      console.log("removed", res.removed);
     } catch (err) {
       console.error("Error removing ingredient:", err);
     }

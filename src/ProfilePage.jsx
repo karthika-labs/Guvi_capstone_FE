@@ -456,7 +456,6 @@ const ProfilePage = () => {
     return [];
   })();
 
-  console.log("gridData:", gridData);
   return (
     <div className="min-h-screen  righteous-regular bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#0f0f1a] text-gray-200">
       <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">

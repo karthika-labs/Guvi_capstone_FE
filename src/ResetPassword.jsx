@@ -49,7 +49,7 @@ function ResetPassword() {
         } else {
           toast.error("Something went wrong. Please try again.");
         }
-        console.log("Error resetting password:", e.message);
+        console.error("Error resetting password:", e.message);
       } finally {
         setLoading(false);
       }

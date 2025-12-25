@@ -44,7 +44,6 @@ function Login() {
           setTimeout(() => {
             navigate('/recipes');
           }, 1000);
-          console.log("user logged in successfully", res.data);
         } else {
           // Response doesn't have expected structure
           const errorMsg = res.data?.message || "Invalid response from server";
@@ -71,18 +70,18 @@ function Login() {
             const errorMsg = e.response.data?.message || "Something went wrong. Please try again later.";
             setErrorMessage(errorMsg);
             toast.error(errorMsg);
-            console.log("error while logging in the user", e.response.status, e.response.data);
+            console.error("error while logging in the user", e.response.status, e.response.data);
           }
         } else if (e.request) {
           // Request was made but no response received
           setErrorMessage("Network error. Please check your connection.");
           toast.error("Network error. Please check your connection.");
-          console.log("network error", e.message);
+          console.error("network error", e.message);
         } else {
           // Something else happened
           setErrorMessage("Something went wrong. Please try again later.");
           toast.error("Something went wrong. Please try again later.");
-          console.log("error while logging in the user", e.message);
+          console.error("error while logging in the user", e.message);
         }
       } finally {
         setLoading(false);
