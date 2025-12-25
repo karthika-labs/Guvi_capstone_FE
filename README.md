@@ -72,6 +72,159 @@ npm run dev
 ```
 This will start the Vite development server, typically at `http://localhost:5173`
 
+## 📖 How to Use the Application
+
+### Step 1: Register or Login
+1. **Register a New Account**
+   - Click on "Register" button in the navigation bar
+   - Fill in your details: username, email, and password
+   - Submit the form to create your account
+   - You'll be automatically redirected to login after successful registration
+
+2. **Login to Existing Account**
+   - Click on "Login" button in the navigation bar
+   - Enter your email and password
+   - Click "Login" to access your account
+   - You'll be redirected to the recipes page upon successful login
+
+3. **Password Reset** (if needed)
+   - Click "Forgot Password?" on the login page
+   - Enter your registered email address
+   - Check your email for the reset link
+   - Follow the link to reset your password
+
+### Step 2: View Recipes
+1. **Browse All Recipes**
+   - After logging in, you'll see the "All Recipes" tab by default
+   - Browse through featured recipes displayed as cards
+   - Each card shows recipe image, name, description, rating, and food preference
+   - Use pagination at the bottom to navigate through pages
+
+2. **View Recipe Details**
+   - Click on any recipe card to view full details
+   - See recipe images/video, ingredients, instructions, and description
+   - View ratings and comments from other users
+   - See the recipe creator's profile information
+
+3. **View Your Recipes**
+   - Click on "My Recipes" tab to see only your created recipes
+   - View all recipes you've shared with the community
+
+### Step 3: Search and Filter Recipes
+1. **Search Recipes**
+   - Click the search icon in the navigation bar
+   - Choose search mode: "Recipe Name" or "Ingredients"
+   - Enter your search term in the search box
+   - Optionally filter by meal type (Breakfast, Lunch, Dinner)
+   - Optionally filter by food preference (Veg, Non-Veg)
+   - Click "Search Recipes" to see results
+   - Use the cross icon to clear search and view all recipes
+
+2. **Filter Search Results**
+   - Search results work across both "All Recipes" and "My Recipes" tabs
+   - When on "My Recipes" tab, search will only show your recipes matching the criteria
+   - Search results persist across pagination
+
+### Step 4: Add a New Recipe
+1. **Create Recipe**
+   - Click "Add Recipe" button in the navigation bar
+   - Fill in the recipe form:
+     - Recipe name (required)
+     - Description (required)
+     - Time duration (required)
+     - Meal type: Select Breakfast, Lunch, or Dinner (required)
+     - Food preference: Select Veg or Non-Veg (required)
+     - Ingredients: Add ingredient name, quantity, and unit
+     - Instructions: Add step-by-step cooking instructions
+     - Upload photos: Add multiple recipe images
+     - Upload video: Add a YouTube video URL (optional)
+   - Click "Submit" to create your recipe
+   - You'll be redirected to view your newly created recipe
+
+2. **Edit Recipe**
+   - Navigate to your recipe detail page
+   - Click the "Edit" button (only visible to recipe owner)
+   - Modify any fields as needed
+   - Click "Update Recipe" to save changes
+
+3. **Delete Recipe**
+   - Navigate to your recipe detail page
+   - Click the "Delete" button (only visible to recipe owner)
+   - Confirm deletion in the modal
+   - Recipe will be permanently deleted
+
+### Step 5: Interact with Recipes
+1. **Like Recipes**
+   - Click the heart icon on any recipe card
+   - Double-tap on recipe images to like
+   - Like count is displayed on the recipe card
+
+2. **Rate Recipes**
+   - Go to a recipe detail page
+   - Click on the stars (1-5) to rate the recipe
+   - Your rating will be saved and displayed
+   - You can update your rating by clicking a different star
+
+3. **Comment on Recipes**
+   - Scroll to the comments section on a recipe page
+   - Type your comment in the text area
+   - Click "Comment" to post
+   - Edit or delete your own comments using the icons
+
+4. **Favorite Recipes**
+   - Click the bookmark icon on any recipe card
+   - Access your favorites from the favorites icon in navigation
+   - Click again to remove from favorites
+
+### Step 6: Manage Your Profile
+1. **View Profile**
+   - Click on your profile picture/username in the navigation bar
+   - View your profile information, recipes, favorites, and followers
+
+2. **Edit Profile**
+   - Go to your profile page
+   - Click "Edit Profile" button
+   - Update your name, bio, location, avatar, and dietary preferences
+   - Save changes
+
+3. **View Other Users' Profiles**
+   - Click on any user's name or avatar
+   - View their recipes, followers, and following
+   - Follow/unfollow users from their profile
+
+### Step 7: Plan Your Week
+1. **Create Week Plan**
+   - Click "Week Plans" in the navigation bar
+   - Select a start date for your week
+   - The system will create a 7-day meal plan
+
+2. **Add Meals to Days**
+   - Click on any meal slot (Breakfast, Lunch, Dinner) for a day
+   - Select a recipe from the modal
+   - Recipe will be added to that meal slot
+   - Meals are filtered by meal type automatically
+
+3. **Remove Meals**
+   - Click the remove icon on any meal slot
+   - Meal will be removed from your plan
+
+4. **View Shopping List**
+   - After adding meals, click "Generate Shopping List"
+   - View automatically generated shopping list with all ingredients
+   - Check off items as you shop
+   - Print, download as PDF, or share the shopping list
+
+### Step 8: Share Recipes
+1. **Share Recipe Link**
+   - Go to any recipe detail page
+   - Click the "Share" button
+   - Choose sharing method:
+     - Copy link to clipboard
+     - Share via WhatsApp
+     - Share via Twitter
+     - Share via Facebook
+     - Use native share (mobile devices)
+   - Recipe links are accessible without login
 
 ## 🎨 Technologies Used
 
