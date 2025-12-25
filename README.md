@@ -2,19 +2,43 @@
 
 Modern, responsive frontend for Recipe Hub application built with React, Vite, and Tailwind CSS.
 
-## 🚀 Features
+## Features
 
-- **User Authentication**: Login, Register, and Password Reset
-- **Recipe Management**: Create, View, Edit, and Delete recipes
-- **Search & Filter**: Advanced recipe search with meal type and food preference filters
-- **Social Features**: Comments, Ratings, Likes, and Favorites
-- **User Profiles**: View and edit user profiles with follow functionality
-- **Week Planner**: Plan meals for the week
-- **Shopping List**: Generate and manage shopping lists
-- **Responsive Design**: Mobile-first design with Tailwind CSS
-- **Image Gallery**: Swiper-based image carousel for recipes
+### User Authentication
+- User Registration, Login, Logout, and Password Reset
 
-## 📋 Prerequisites
+### Recipe Management
+- Create, View, Edit, and Delete recipes
+- Upload images with recipes
+- Recipes can be rated and commented on by users
+
+### Search & Filter
+- Advanced recipe search
+- Filter by meal type and food preferences
+
+### Social Features
+- Like and favorite recipes
+- Comment on and rate recipes
+- Follow and unfollow other users
+
+### User Profiles
+- View and edit user profiles
+- Display user recipes, favorites, and followers
+
+### Week Planner
+- Plan meals for the week using saved recipes
+
+### Shopping List
+- Automatically generate shopping lists from planned meals
+- Shopping lists can be printed, downloaded, and shared
+
+### Responsive Design
+- Mobile-first and fully responsive UI using Tailwind CSS
+
+### Image Gallery
+- Swiper-based image carousel for recipe images
+
+##  Prerequisites
 
 Before you begin, ensure you have the following installed:
 
@@ -48,52 +72,6 @@ npm run dev
 ```
 This will start the Vite development server, typically at `http://localhost:5173`
 
-### Build for Production
-```bash
-npm run build
-```
-This creates an optimized production build in the `dist` folder.
-
-### Preview Production Build
-```bash
-npm run preview
-```
-This serves the production build locally for testing.
-
-### Linting
-```bash
-npm run lint
-```
-This runs ESLint to check for code quality issues.
-
-## 📁 Project Structure
-
-```
-Guvi_capstone_FE/
-├── public/
-│   ├── recipelogo.webp
-│   ├── hero-image.jpg
-│   └── ...
-├── src/
-│   ├── assets/           # Static assets
-│   ├── components/       # Reusable components
-│   ├── config/
-│   │   └── api.js        # API configuration
-│   ├── context/
-│   │   └── ApiContext.jsx # Global state management
-│   ├── App.jsx           # Main app component
-│   ├── main.jsx          # Entry point
-│   ├── index.css         # Global styles
-│   ├── Home.jsx          # Home page
-│   ├── Login.jsx         # Login page
-│   ├── Register.jsx     # Registration page
-│   ├── RecipePage.jsx   # Recipe detail page
-│   ├── RecipeForm.jsx   # Create/Edit recipe form
-│   ├── ProfilePage.jsx  # User profile page
-│   └── ...              # Other pages and components
-├── vite.config.js        # Vite configuration
-└── package.json
-```
 
 ## 🎨 Technologies Used
 
@@ -131,7 +109,7 @@ Guvi_capstone_FE/
 - **GSAP 3.13.0**: Animation library
 - **Three.js 0.181.1**: 3D graphics (if used)
 
-## 🔌 API Integration
+##  API Integration
 
 The frontend communicates with the backend API. The base URL is configured in:
 - `src/config/api.js`
@@ -143,7 +121,7 @@ All API calls are made through the `ApiContext` which provides:
 - Error handling
 - Toast notifications
 
-## 🎯 Key Features Implementation
+##  Key Features Implementation
 
 ### Authentication
 - JWT token stored in localStorage
@@ -177,7 +155,7 @@ All API calls are made through the `ApiContext` which provides:
 - Shopping list generation
 - Meal overlap detection
 
-## 🎨 Styling
+##  Styling
 
 The application uses Tailwind CSS with:
 - Custom color palette (purple, pink gradients)
@@ -185,22 +163,21 @@ The application uses Tailwind CSS with:
 - Custom animations
 - Dark theme optimized
 
-## 🔒 Security Considerations
+##  Security Considerations
 
 - JWT tokens stored in localStorage
 - API calls include authentication headers
 - Input validation on forms
-- XSS protection through React's built-in escaping
 - CORS handled by backend
 
-## 📱 Responsive Design
+##  Responsive Design
 
 The application is fully responsive with breakpoints for:
 - Mobile devices
 - Tablets
 - Desktop screens
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 1. **API connection failed**
    - Check if backend server is running
@@ -219,6 +196,6 @@ The application is fully responsive with breakpoints for:
    - Clear localStorage and try logging in again
    - Check if JWT token is being sent in API requests
 
-## 📄 License
+
 
 This project is part of the Guvi Capstone project.
